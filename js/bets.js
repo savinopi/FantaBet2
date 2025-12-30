@@ -12,8 +12,7 @@ import {
     setDoc,
     doc, 
     onSnapshot,
-    getGiornataBetsCollectionRef,
-    addUnsubscribe
+    getGiornataBetsCollectionRef
 } from './firebase-config.js';
 import { getTeamLogo } from './config.js';
 import { messageBox } from './utils.js';
@@ -37,7 +36,7 @@ import {
     getAdminBetsUnsubscribe,
     setAdminBetsUnsubscribe
 } from './state.js';
-import { adjustCredits } from './auth.js';
+import { adjustCredits, addUnsubscribe } from './auth.js';
 
 // Import di funzioni che saranno definite altrove
 let getGiornataDeadline;
