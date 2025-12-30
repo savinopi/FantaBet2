@@ -86,6 +86,17 @@ import {
     setupAuthStateListener
 } from './auth.js';
 
+import {
+    renderOpenMatches,
+    renderPlacedBets,
+    setupAdminBetsListener,
+    setBetsDependencies,
+    recordPrediction,
+    updateGiornataBetButton,
+    placeBetForGiornata,
+    setupGlobalBetsFunctions
+} from './bets.js';
+
 // ===================================
 // VARIABILI MODULO
 // ===================================
@@ -102,6 +113,17 @@ const setupFirebase = async () => {
     try {
         // Firebase è già inizializzato in firebase-config.js
         firebaseInitialized = true;
+        
+        // Setup funzioni globali per bets (onclick nell'HTML)
+        setupGlobalBetsFunctions();
+        
+        // Setup dipendenze per bets.js
+        setBetsDependencies({
+            getGiornataDeadline: getGiornataDeadline,
+            isDeadlinePassed: isDeadlinePassed,
+            checkPendingBonusRequests: () => {}, // placeholder
+            renderAdminBetsList: () => {} // placeholder
+        });
         
         document.getElementById('auth-status').textContent = 'In attesa di autenticazione...';
         
@@ -315,20 +337,83 @@ const loadInitialData = async () => {
     // Implementazione esistente
 };
 
+// Cache per gli orari delle giornate
+let scheduleCache = null;
+
 const loadActiveGiornata = async () => {
     try {
         const scheduleSnapshot = await getDocs(getScheduleCollectionRef());
-        for (const doc of scheduleSnapshot.docs) {
-            const data = doc.data();
+        for (const docSnap of scheduleSnapshot.docs) {
+            const data = docSnap.data();
             if (data.isActive) {
-                console.log('[DEBUG loadActiveGiornata] Giornata attiva trovata:', doc.id);
-                return parseInt(doc.id, 10);
+                console.log('[DEBUG loadActiveGiornata] Giornata attiva trovata:', data.giornata);
+                return parseInt(data.giornata, 10);
             }
         }
     } catch (error) {
         console.error('Errore caricamento giornata attiva:', error);
     }
     return null;
+};
+
+// Carica tutti gli orari delle giornate (con cache)
+const loadAllSchedules = async () => {
+    if (scheduleCache) return scheduleCache;
+    
+    try {
+        const snapshot = await getDocs(getScheduleCollectionRef());
+        scheduleCache = {};
+        snapshot.docs.forEach(docSnap => {
+            const data = docSnap.data();
+            scheduleCache[data.giornata] = data;
+        });
+        console.log('Schedule cache caricata:', scheduleCache);
+        return scheduleCache;
+    } catch (error) {
+        console.error('Errore caricamento schedules:', error);
+        return {};
+    }
+};
+
+// Orario di default per una giornata (se non configurato dall'admin)
+const getDefaultSchedule = (giornata) => {
+    const date = new Date().toISOString().split('T')[0];
+    return {
+        giornata: giornata.toString(),
+        date: date,
+        time: '20:45',
+        confirmed: false,
+        notes: 'Orario di default (non ancora confermato)'
+    };
+};
+
+// Ottieni l'orario di una specifica giornata
+const getGiornataSchedule = async (giornata) => {
+    const allSchedules = await loadAllSchedules();
+    
+    if (allSchedules[giornata]) {
+        return allSchedules[giornata];
+    }
+    
+    // Se non esiste, restituisci default
+    return getDefaultSchedule(giornata);
+};
+
+// Calcola la deadline (data + ora) per una giornata
+const getGiornataDeadline = async (giornata) => {
+    const schedule = await getGiornataSchedule(giornata);
+    const deadlineString = `${schedule.date}T${schedule.time}:00`;
+    return {
+        deadline: new Date(deadlineString),
+        confirmed: schedule.confirmed,
+        notes: schedule.notes
+    };
+};
+
+// Verifica se la deadline è passata
+const isDeadlinePassed = async (giornata) => {
+    const { deadline } = await getGiornataDeadline(giornata);
+    return new Date() >= deadline;
 };
 
 const determineLastCompletedGiornata = () => {
@@ -383,20 +468,10 @@ const renderStandingsTrend = () => {
     // Implementazione placeholder
 };
 
-const renderOpenMatches = (matches, giornata) => {
-    console.log('Rendering partite aperte per giornata:', giornata, 'Partite:', matches.length);
-    // Implementazione placeholder
-};
-
-const renderPlacedBets = (bets) => {
-    // Implementazione placeholder
-};
+// Le funzioni renderOpenMatches, renderPlacedBets, setupAdminBetsListener
+// sono importate da bets.js
 
 const renderAdminUsersList = (users) => {
-    // Implementazione placeholder
-};
-
-const setupAdminBetsListener = (giornata, users) => {
     // Implementazione placeholder
 };
 
