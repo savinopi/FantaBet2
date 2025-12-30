@@ -213,6 +213,11 @@
         </div>
     </div>
 
+    <!-- UEFA Draw Theme Audio -->
+    <audio id="draw-theme-audio" loop preload="auto">
+        <source src="https://raw.githubusercontent.com/savinopi/FantaBet-OP/main/UEFADrawTheme.mp3" type="audio/mpeg">
+    </audio>
+
     <!-- ========================================
          CONTENITORE PRINCIPALE
          ======================================== -->
@@ -333,6 +338,23 @@
                             </svg>
                             <span class="relative text-white font-bold text-sm sm:text-base md:text-lg tracking-wide">Area Admin</span>
                         </button>
+                        
+                        <!-- Sorteggio Coppa Italia (larga 2 colonne) -->
+                        <button onclick="setAppView('draw')" class="col-span-2 group relative bg-gradient-to-br from-slate-800/90 to-slate-950 hover:from-amber-900/40 hover:to-slate-950 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-xl hover:shadow-amber-500/20 transform hover:scale-[1.03] transition-all duration-300 flex flex-col items-center justify-center min-h-[80px] sm:min-h-[100px] border-2 border-slate-700/50 hover:border-amber-500/60 backdrop-blur-sm overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-500/0 group-hover:from-amber-500/5 group-hover:to-amber-500/10 transition-all duration-300"></div>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg/960px-Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg" alt="Coppa Italia" class="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-2 sm:mb-3 object-contain drop-shadow-lg">
+                            <span class="relative text-white font-bold text-sm sm:text-base md:text-lg tracking-wide">Sorteggio Coppa Italia</span>
+                        </button>
+                        
+                        <!-- Regolamento PDF Download -->
+                        <a href="https://raw.githubusercontent.com/savinopi/FantaBet-OP/main/Regolamento_2025-2026_v1.pdf" download="Regolamento_2025-2026_v1.pdf" target="_blank" class="col-span-2 group relative bg-gradient-to-br from-slate-800/90 to-slate-950 hover:from-red-900/40 hover:to-slate-950 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-xl hover:shadow-red-500/20 transform hover:scale-[1.03] transition-all duration-300 flex flex-col items-center justify-center min-h-[80px] sm:min-h-[100px] border-2 border-slate-700/50 hover:border-red-500/60 backdrop-blur-sm overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-red-500/0 to-red-500/0 group-hover:from-red-500/5 group-hover:to-red-500/10 transition-all duration-300"></div>
+                            <svg class="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-2 sm:mb-3 text-red-400 drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="relative text-white font-bold text-sm sm:text-base md:text-lg tracking-wide">Scarica Regolamento</span>
+                            <span class="relative text-gray-400 text-xs mt-0.5 sm:mt-1">PDF</span>
+                        </a>
                     </div>
 
                     <!-- Classifica -->
@@ -701,6 +723,128 @@
                     
                     <!-- Dettagli statistiche -->
                     <div id="league-stats-details" class="space-y-4"></div>
+                </div>
+                
+                <!-- SORTEGGIO COPPA ITALIA (Desktop Only - Compact Layout) -->
+                <div id="draw-container" class="hidden">
+                    <div class="draw-desktop-layout">
+                        <div class="card p-3" style="max-width: 100%;">
+                            <!-- Header compatto -->
+                            <div class="flex justify-between items-center mb-2 pb-2 border-b border-amber-800">
+                                <h2 class="text-xl font-bold text-amber-400 flex items-center">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg/960px-Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg" alt="Coppa Italia" class="w-7 h-7 mr-2 object-contain">
+                                    Sorteggio Coppa Italia
+                                </h2>
+                                <button onclick="setAppView('home')" class="btn-secondary px-3 py-1 text-sm">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    Home
+                                </button>
+                            </div>
+                            
+                            <!-- Layout a 3 colonne: Gruppi | Centro Estrazione | Gruppi -->
+                            <div class="grid grid-cols-12 gap-3" style="min-height: 640px;">
+                                <!-- Colonna sinistra: Gruppo A -->
+                                <div class="col-span-4 flex flex-col">
+                                    <div class="bg-gradient-to-br from-emerald-900/40 to-emerald-800/20 border-2 border-emerald-500 rounded-xl p-3 h-full flex flex-col">
+                                        <h3 class="font-bold text-xl text-emerald-300 mb-2 flex items-center justify-center">
+                                            <svg class="w-6 h-6 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            GRUPPO A
+                                        </h3>
+                                        <div id="group-a-teams" class="space-y-2 flex-1 overflow-y-auto">
+                                            <p class="text-gray-500 text-center text-sm py-4">In attesa...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Colonna centrale: Stato sorteggio ed estrazione -->
+                                <div class="col-span-4 flex flex-col justify-start items-center py-2">
+                                    <div id="draw-status" class="w-full">
+                                        <!-- Stato Iniziale -->
+                                        <div id="draw-initial" class="text-center space-y-2">
+                                            <p class="text-base text-blue-300">Pronto per iniziare</p>
+                                            <button onclick="startDraw()" class="btn-primary text-base px-6 py-2">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg/960px-Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg" alt="Coppa Italia" class="w-5 h-5 inline mr-2 object-contain">
+                                                Inizia Sorteggio
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- In Corso -->
+                                        <div id="draw-in-progress" class="hidden text-center space-y-2">
+                                            <div class="mb-1">
+                                                <p class="text-lg font-bold text-yellow-400" id="current-group-label">GRUPPO A</p>
+                                                <p class="text-xs text-gray-400">Estrazione <span id="draw-count">1</span> di 10</p>
+                                            </div>
+                                            
+                                            <!-- Urna compatta -->
+                                            <div id="draw-urn" class="my-2">
+                                                <div class="relative mx-auto w-32 h-32 flex items-center justify-center">
+                                                    <div class="absolute inset-0 bg-gradient-to-br from-yellow-600 to-orange-600 rounded-full opacity-20 animate-pulse"></div>
+                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg/960px-Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg" alt="Coppa Italia" class="relative z-10 w-28 h-28 object-contain" id="draw-icon" style="filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));">
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Squadra estratta compatta -->
+                                            <div id="drawn-team" class="hidden animate-scale-in">
+                                                <div class="bg-gradient-to-br from-green-600/30 to-blue-600/30 border-2 border-green-500 rounded-xl p-4 shadow-2xl">
+                                                    <img id="drawn-team-logo" src="" alt="" class="w-32 h-32 mx-auto mb-2 object-contain">
+                                                    <p id="drawn-team-name" class="text-2xl font-bold text-white text-center mb-1"></p>
+                                                    <div id="drawn-team-stats" class="team-stats text-sm"></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mt-2">
+                                                <button onclick="drawNextTeam()" id="draw-next-btn" class="btn-primary px-6 py-2 text-sm relative z-10">
+                                                    <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    Estrai Prossima
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Completato -->
+                                        <div id="draw-complete" class="hidden text-center space-y-2">
+                                            <p class="text-lg font-bold text-green-400">🎉 Completato! 🎉</p>
+                                            <div class="flex flex-col space-y-2">
+                                                <button onclick="resetDraw()" class="btn-secondary px-4 py-1 text-sm">
+                                                    <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    Nuovo Sorteggio
+                                                </button>
+                                                <button onclick="copyLastDraw()" class="btn-primary px-4 py-1 text-sm">
+                                                    <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
+                                                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
+                                                    </svg>
+                                                    Copia JSON
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Colonna destra: Gruppo B -->
+                                <div class="col-span-4 flex flex-col">
+                                    <div class="bg-gradient-to-br from-sky-900/40 to-sky-800/20 border-2 border-sky-500 rounded-xl p-3 h-full flex flex-col">
+                                        <h3 class="font-bold text-xl text-sky-300 mb-2 flex items-center justify-center">
+                                            <svg class="w-6 h-6 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            GRUPPO B
+                                        </h3>
+                                        <div id="group-b-teams" class="space-y-2 flex-1 overflow-y-auto">
+                                            <p class="text-gray-500 text-center text-sm py-4">In attesa...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
             </div> <!-- fine app-content-area -->
