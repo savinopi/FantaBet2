@@ -523,12 +523,25 @@ document.addEventListener('click', (event) => {
 });
 
 // ===================================
-// INIZIALIZZAZIONE
+// INIZIALIZZAZIONE (Export per HTML)
 // ===================================
 
-window.onload = () => {
+/**
+ * Funzione principale di inizializzazione dell'app
+ * Esportata per essere chiamata dall'HTML
+ */
+export const initializeApp = () => {
     console.log('FANTABet - Inizializzazione...');
     setupFirebase();
+};
+
+// Fallback per caricamento diretto
+window.onload = () => {
+    // Se l'app non è già stata inizializzata dal modulo
+    if (!window.FANTABetInitialized) {
+        initializeApp();
+        window.FANTABetInitialized = true;
+    }
 };
 
 // Export per debug
