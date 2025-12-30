@@ -20,7 +20,7 @@ import {
     getSquadsCollectionRef,
     getScheduleCollectionRef,
     getGiornataBetsCollectionRef,
-    getTeamCollectionRef,
+    getTeamsCollectionRef,
     getResultsCollectionRef,
     getMatchesCollectionRef,
     getPlayersCollectionRef,
@@ -594,7 +594,7 @@ export const clearHistoricResultsAndTeams = async (confirmed) => {
     showProgressBar('Reset Totale Database');
 
     const collectionsToClear = [
-        getTeamCollectionRef(), 
+        getTeamsCollectionRef(), 
         getResultsCollectionRef(), 
         getMatchesCollectionRef(),
         getGiornataBetsCollectionRef()
@@ -805,12 +805,12 @@ export const clearAllTeams = async () => {
     showProgressBar('Cancellazione Squadre');
     
     try {
-        const snapshot = await getDocs(getTeamCollectionRef());
+        const snapshot = await getDocs(getTeamsCollectionRef());
         const totalDocs = snapshot.docs.length;
         let deletedCount = 0;
         
         for (const docSnapshot of snapshot.docs) {
-            await deleteDoc(doc(getTeamCollectionRef(), docSnapshot.id));
+            await deleteDoc(doc(getTeamsCollectionRef(), docSnapshot.id));
             deletedCount++;
             
             const progress = (deletedCount / totalDocs) * 100;
@@ -879,7 +879,7 @@ export const addTeam = async () => {
     
     try {
         const teamId = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
-        await setDoc(doc(getTeamCollectionRef(), teamId), {
+        await setDoc(doc(getTeamsCollectionRef(), teamId), {
             name: teamName
         });
         teamNameInput.value = '';
