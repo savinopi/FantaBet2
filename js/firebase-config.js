@@ -60,7 +60,7 @@ const getResultsCollectionRef = () => collection(db, 'fantabet_results');
 const getMatchesCollectionRef = () => collection(db, 'fantabet_matches');
 const getUsersCollectionRef = () => collection(db, 'fantabet_users');
 const getGiornataBetsCollectionRef = () => collection(db, 'fantabet_giornata_bets');
-const getScheduleCollectionRef = () => collection(db, 'fantabet_schedules');
+const getScheduleCollectionRef = () => collection(db, 'giornate_schedule');
 const getBonusCollectionRef = () => collection(db, 'fantabet_bonus');
 const getSquadsCollectionRef = () => collection(db, 'fantabet_squads');
 const getPlayersCollectionRef = () => collection(db, 'fantabet_players');
