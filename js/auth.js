@@ -309,6 +309,7 @@ export const setIsUserAdmin = (admin) => {
 export const getUserId = () => userId;
 export const getUserCredits = () => userCredits;
 export const getIsUserAdmin = () => isUserAdmin;
+export const getCurrentUserProfile = () => currentUserProfile;
 
 // ===================================
 // SALVATAGGIO PROFILO
