@@ -97,6 +97,13 @@ import {
     setupGlobalBetsFunctions
 } from './bets.js';
 
+import {
+    renderHistoricResults,
+    renderStandings,
+    renderStatistics,
+    renderStandingsTrend
+} from './rendering.js';
+
 // ===================================
 // VARIABILI MODULO
 // ===================================
@@ -451,25 +458,10 @@ const updateMatchToCloseSelect = (matches) => {
     // Implementazione placeholder
 };
 
-const renderHistoricResults = (results) => {
-    // Implementazione placeholder - da importare da rendering.js
-    console.log('Rendering risultati storici:', results.length);
-};
-
-const renderStandings = () => {
-    // Implementazione placeholder
-};
-
-const renderStatistics = () => {
-    // Implementazione placeholder
-};
-
-const renderStandingsTrend = () => {
-    // Implementazione placeholder
-};
-
 // Le funzioni renderOpenMatches, renderPlacedBets, setupAdminBetsListener
 // sono importate da bets.js
+// Le funzioni renderHistoricResults, renderStandings, renderStatistics, renderStandingsTrend
+// sono importate da rendering.js
 
 const renderAdminUsersList = (users) => {
     // Implementazione placeholder
