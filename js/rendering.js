@@ -183,14 +183,9 @@ export const calculateStandings = (results) => {
  */
 export const renderStandings = (sortColumn = null) => {
     const container = document.getElementById('standings-container');
-    if (!container) {
-        console.error('renderStandings: container standings-container non trovato');
-        return;
-    }
+    if (!container) return;
     
     const results = state.allResults;
-    console.log('renderStandings: risultati caricati:', results?.length || 0);
-    
     if (!results || results.length === 0) {
         container.innerHTML = '<p class="text-sm sm:text-base text-gray-500 text-center py-4 px-4">Carica i risultati per visualizzare la classifica</p>';
         return;
@@ -259,7 +254,7 @@ export const renderStandings = (sortColumn = null) => {
         const goalDiffText = goalDiff > 0 ? `+${goalDiff}` : goalDiff.toString();
         
         html += `
-            <tr class="hover:bg-gray-700/50 transition-colors cursor-pointer" onclick="openTeamStatsModal('${team.team}')">
+            <tr class="hover:bg-gray-700/50 transition-colors">
                 <td style="padding: 0.5rem 0.25rem; text-align: center;" class="${posClass}">${pos}</td>
                 <td style="padding: 0.5rem 0.15rem;">
                     <img src="${getTeamLogo(team.team)}" alt="${team.team}" 
