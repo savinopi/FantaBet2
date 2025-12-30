@@ -41,6 +41,7 @@ import {
     TEAM_LOGOS, 
     getTeamLogo,
     SERIE_A_DATES,
+    getSerieAMatchDate,
     BONUS_TYPES
 } from './config.js';
 
@@ -469,7 +470,8 @@ const loadAllSchedules = async () => {
 
 // Orario di default per una giornata (se non configurato dall'admin)
 const getDefaultSchedule = (giornata) => {
-    const date = new Date().toISOString().split('T')[0];
+    // Usa la data dal calendario Serie A
+    const date = getSerieAMatchDate(parseInt(giornata));
     return {
         giornata: giornata.toString(),
         date: date,
