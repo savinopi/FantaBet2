@@ -601,13 +601,6 @@ const renderProfileArea = () => {
     }
 };
 
-const loadPlayerLeaderboards = () => { console.log('Loading player leaderboards...'); };
-const loadSquadsData = () => { console.log('Loading squads data...'); };
-const loadPlayerStats = () => { console.log('Loading player stats...'); };
-const loadUserBonuses = () => { console.log('Loading user bonuses...'); };
-const loadLeagueStatsData = () => { console.log('Loading league stats...'); };
-const loadStandingsTrendChart = () => { console.log('Loading standings trend chart...'); };
-
 // ===================================
 // FUNZIONI MENU
 // ===================================
