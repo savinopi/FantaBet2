@@ -226,3 +226,10 @@ export const getStateSnapshot = () => ({
     standingsSortColumn,
     standingsSortDirection
 });
+
+// ===================================
+// ESPORTAZIONI WINDOW (per script inline)
+// ===================================
+window.getAllResults = getAllResults;
+window.getPlayerStatsData = getPlayerStatsData;
+window.getSquadsData = getSquadsData;

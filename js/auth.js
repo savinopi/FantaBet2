@@ -244,28 +244,63 @@ const updateAdminUI = (isAdmin) => {
  * Aggiorna la visualizzazione delle info utente
  */
 export const updateUserInfoDisplay = () => {
-    const userCreditsElement = document.getElementById('user-credits-display'); 
     const userDisplayNameElement = document.getElementById('user-display-name');
-    const userRoleElement = document.getElementById('user-role-display');
+    const profileEmailElement = document.getElementById('profile-email');
     const userIdElement = document.getElementById('user-id-display');
+    const userRoleElement = document.getElementById('user-role-display');
+    const authStatusElement = document.getElementById('auth-status');
 
-    console.log('[DEBUG PROFILE] Updating display - Profile:', currentUserProfile, 'isAdmin:', isUserAdmin);
+    console.log('[DEBUG PROFILE] Updating display - Profile:', currentUserProfile, 'isAdmin:', isUserAdmin, 'userId:', userId);
 
-    if (userCreditsElement) userCreditsElement.textContent = `Crediti: ${userCredits}`;
-    
+    // Nome profilo (input editabile)
     if (userDisplayNameElement && currentUserProfile) { 
         const displayText = currentUserProfile.displayName || currentUserProfile.email || 'Utente';
-        userDisplayNameElement.textContent = displayText;
+        userDisplayNameElement.value = displayText;
         console.log('[DEBUG PROFILE] Display name set to:', displayText);
     }
-    
+
+    // Email (readonly)
+    if (profileEmailElement && currentUserProfile) {
+        profileEmailElement.value = currentUserProfile.email || '';
+        console.log('[DEBUG PROFILE] Email set to:', currentUserProfile.email);
+    }
+
+    // ID Utente (readonly)
+    if (userIdElement && userId) {
+        userIdElement.value = userId;
+        console.log('[DEBUG PROFILE] ID set to:', userId);
+    }
+
+    // Ruolo (readonly)
     if (userRoleElement) {
-        userRoleElement.textContent = isUserAdmin ? '👤 Admin' : '👤 Utente';
+        userRoleElement.value = isUserAdmin ? 'Admin' : 'Utente';
         console.log('[DEBUG PROFILE] Role set to:', isUserAdmin ? 'Admin' : 'Utente');
     }
-    
-    if (userIdElement && userId) {
-        userIdElement.textContent = `ID: ${userId}`;
+
+    // Stato autenticazione
+    if (authStatusElement) {
+        authStatusElement.textContent = 'Autenticato';
+        authStatusElement.className = 'text-center text-sm text-green-400 font-semibold mb-6';
+    }
+
+    // Aggiungi listener per tracciare modifiche al Nome Profilo
+    if (userDisplayNameElement) {
+        // Salva il valore originale in una variabile globale per ripristinarlo dopo
+        window.originalDisplayName = userDisplayNameElement.value;
+        userDisplayNameElement.addEventListener('change', () => {
+            if (userDisplayNameElement.value !== window.originalDisplayName) {
+                window.profileHasUnsavedChanges = true;
+            } else {
+                window.profileHasUnsavedChanges = false;
+            }
+        });
+        userDisplayNameElement.addEventListener('input', () => {
+            if (userDisplayNameElement.value !== window.originalDisplayName) {
+                window.profileHasUnsavedChanges = true;
+            } else {
+                window.profileHasUnsavedChanges = false;
+            }
+        });
     }
 };
 
@@ -340,7 +375,7 @@ export const getCurrentUserProfile = () => currentUserProfile;
  * Salva le modifiche al profilo utente
  */
 export const saveUserProfile = async () => {
-    const newDisplayName = document.getElementById('profile-display-name').value.trim();
+    const newDisplayName = document.getElementById('user-display-name').value.trim();
     if (!newDisplayName) {
         messageBox("Il nome visualizzato non può essere vuoto.");
         return;
@@ -354,6 +389,12 @@ export const saveUserProfile = async () => {
     try {
         await updateDoc(doc(getUsersCollectionRef(), userId), { displayName: newDisplayName });
         messageBox("Profilo aggiornato con successo!");
+        
+        // Reset flag di modifiche non salvate
+        window.profileHasUnsavedChanges = false;
+        
+        // Aggiorna il profilo locale
+        currentUserProfile.displayName = newDisplayName;
     } catch (error) {
         console.error("Errore salvataggio profilo:", error);
         messageBox("Errore durante il salvataggio del profilo: " + error.message);
@@ -392,10 +433,12 @@ export const setupAuthStateListener = (callbacks) => {
             if (loadingOverlay) loadingOverlay.classList.remove('hidden');
             
             userId = user.uid;
-            authStatus.textContent = 'Autenticato';
-            authStatus.classList.add('hidden');
+            if (authStatus) {
+                authStatus.textContent = 'Autenticato';
+                authStatus.classList.add('hidden');
+            }
 
-            loginContainer.classList.add('hidden');
+            if (loginContainer) loginContainer.classList.add('hidden');
             
             // Callback per operazioni post-login
             if (callbacks.onLogin) {
@@ -404,22 +447,24 @@ export const setupAuthStateListener = (callbacks) => {
 
             // Mostra l'app
             setTimeout(() => {
-                mainAppContainer.classList.remove('hidden');
-                logoutButton.classList.remove('hidden');
+                if (mainAppContainer) mainAppContainer.classList.remove('hidden');
+                if (logoutButton) logoutButton.classList.remove('hidden');
                 if (loadingOverlay) loadingOverlay.classList.add('hidden');
             }, 500);
 
         } else {
             userId = null;
-            authStatus.textContent = 'Non autenticato';
-            authStatus.classList.remove('hidden');
+            if (authStatus) {
+                authStatus.textContent = 'Non autenticato';
+                authStatus.classList.remove('hidden');
+            }
 
             const userDisplayNameElement = document.getElementById('user-display-name');
             if (userDisplayNameElement) userDisplayNameElement.textContent = '';
 
-            logoutButton.classList.add('hidden');
-            loginContainer.classList.remove('hidden');
-            mainAppContainer.classList.add('hidden');
+            if (logoutButton) logoutButton.classList.add('hidden');
+            if (loginContainer) loginContainer.classList.remove('hidden');
+            if (mainAppContainer) mainAppContainer.classList.add('hidden');
             
             // Callback per operazioni post-logout
             if (callbacks.onLogout) {

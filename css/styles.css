@@ -39,7 +39,7 @@ body {
     background-attachment: fixed;
     background-repeat: no-repeat;
     /* Padding per safe area */
-    padding-top: max(0.75rem, var(--safe-area-inset-top));
+    padding-top: 0;
     padding-right: max(0.75rem, var(--safe-area-inset-right));
     padding-bottom: max(0.75rem, var(--safe-area-inset-bottom));
     padding-left: max(0.75rem, var(--safe-area-inset-left));
@@ -830,3 +830,177 @@ div[class*="grid"] img {
         font-size: 0.85rem !important;
     }
 }
+
+/* ===================================
+   BOTTOM NAVIGATION BAR
+   Navigazione fissa in basso su mobile
+   =================================== */
+
+#bottom-nav {
+    display: flex;
+    width: 100%;
+}
+
+#bottom-nav > div {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+    gap: 0;
+}
+
+.bottom-nav-tab {
+    color: #9ca3af;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.25rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+    min-height: 5rem;
+}
+
+.bottom-nav-tab svg {
+    width: 2rem;
+    height: 2rem;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.bottom-nav-tab span {
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+    display: block;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.bottom-nav-tab.active {
+    color: #60a5fa;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.bottom-nav-tab.active svg {
+    transform: scale(1.05);
+}
+
+.bottom-nav-tab:active {
+    background-color: rgba(59, 130, 246, 0.15);
+}
+
+.bottom-nav-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(to right, #3b82f6, #60a5fa);
+    box-shadow: 0 -2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive per diverse risoluzioni */
+@media (max-width: 360px) {
+    .bottom-nav-tab svg {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+    
+    .bottom-nav-tab span {
+        font-size: 0.5rem;
+    }
+}
+
+@media (min-width: 361px) and (max-width: 480px) {
+    .bottom-nav-tab svg {
+        width: 2rem;
+        height: 2rem;
+    }
+    
+    .bottom-nav-tab span {
+        font-size: 0.625rem;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .bottom-nav-tab svg {
+        width: 2.25rem;
+        height: 2.25rem;
+    }
+    
+    .bottom-nav-tab span {
+        font-size: 0.75rem;
+    }
+    
+    #bottom-nav {
+        height: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    #main-app-container #app-content-area {
+        padding-bottom: calc(5.5rem + max(0.5rem, var(--safe-area-inset-bottom)));
+        padding-top: max(1rem, var(--safe-area-inset-top));
+    }
+
+    #home-container,
+    #league-data-container,
+    #betting-container,
+    #profile-container,
+    #admin-container {
+        padding-bottom: calc(5.5rem + max(0.5rem, var(--safe-area-inset-bottom)));
+        padding-top: max(1rem, var(--safe-area-inset-top));
+    }
+}
+
+/* TOP NAVIGATION BAR */
+#top-nav {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3.5rem;
+    background-color: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #1f2937;
+    z-index: 35;
+    padding-top: max(0.5rem, var(--safe-area-inset-top));
+    padding-left: max(0.75rem, var(--safe-area-inset-left));
+    padding-right: max(0.75rem, var(--safe-area-inset-right));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#top-nav-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #60a5fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    #top-nav {
+        display: flex;
+    }
+}
+
+/* Nascondi bottom nav su desktop */
+@media (min-width: 769px) {
+    #bottom-nav {
+        display: none;
+    }
+}
+

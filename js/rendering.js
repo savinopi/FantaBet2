@@ -13,6 +13,26 @@ import {
 } from './firebase-config.js';
 
 // ===================================
+// HEADER SEZIONE RIUTILIZZABILE
+// ===================================
+
+/**
+ * Crea l'HTML dell'header della sezione
+ * @param {string} title - Titolo della sezione
+ * @param {string} colorClass - Classe colore (es. 'text-yellow-400', 'text-blue-400')
+ * @returns {string} HTML dell'header
+ */
+export const createSectionHeader = (title, colorClass) => {
+    return `
+        <div class="pb-4 border-b border-gray-700">
+            <h1 class="text-2xl sm:text-3xl font-bold ${colorClass}">
+                ${title}
+            </h1>
+        </div>
+    `;
+};
+
+// ===================================
 // FORMATTAZIONE DATE
 // ===================================
 
@@ -1010,6 +1030,9 @@ export const renderStandingsTrend = () => {
             }
         }
     });
+    
+    // Esponi su window per l'uso inline
+    window.standingsTrendChartInstance = standingsTrendChart;
 };
 
 // ===================================

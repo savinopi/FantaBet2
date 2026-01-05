@@ -106,7 +106,8 @@ import {
     renderHistoricResults,
     renderStandings,
     renderStatistics,
-    renderStandingsTrend
+    renderStandingsTrend,
+    createSectionHeader
 } from './rendering.js';
 
 import {
@@ -178,12 +179,67 @@ let firebaseInitialized = false;
 // SETUP FIREBASE
 // ===================================
 
+/**
+ * Renderizza gli header di tutte le sezioni
+ */
+const setupSectionHeaders = () => {
+    // Definizione degli header per ogni sezione - colore azzurro uniforme
+    const headers = [
+        {
+            title: 'Home',
+            color: 'text-blue-400',
+            container: 'home-container'
+        },
+        {
+            title: 'Scommesse',
+            color: 'text-blue-400',
+            container: 'betting-container'
+        },
+        {
+            title: 'Dati Lega',
+            color: 'text-blue-400',
+            container: 'league-data-container'
+        },
+        {
+            title: 'Profilo',
+            color: 'text-blue-400',
+            container: 'profile-container'
+        },
+        {
+            title: 'Profilo',
+            color: 'text-blue-400',
+            container: 'user-bonus-container'
+        },
+        {
+            title: 'Settings',
+            color: 'text-blue-400',
+            container: 'admin-container'
+        }
+    ];
+    
+    // Renderizza ogni header
+    headers.forEach(header => {
+        const container = document.getElementById(header.container);
+        if (container) {
+            const firstChild = container.querySelector('div:first-child');
+            if (firstChild && !firstChild.querySelector('h1')) {
+                // Solo se non esiste già un h1 (header non ancora creato)
+                const headerHTML = createSectionHeader(header.title, header.color);
+                firstChild.insertAdjacentHTML('afterbegin', headerHTML);
+            }
+        }
+    });
+};
+
 const setupFirebase = async () => {
     if (firebaseInitialized) return;
     
     try {
         // Firebase è già inizializzato in firebase-config.js
         firebaseInitialized = true;
+        
+        // Renderizza gli header di tutte le sezioni
+        setupSectionHeaders();
         
         // Setup funzioni globali per bets (onclick nell'HTML)
         setupGlobalBetsFunctions();
