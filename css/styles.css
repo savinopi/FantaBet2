@@ -17,6 +17,22 @@
     --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
+/* Colore personalizzato per righe alternate tabella */
+.bg-gray-750 {
+    background-color: rgb(55, 65, 81);
+}
+
+/* Sottosezioni Admin visibili solo su desktop */
+.admin-desktop-only {
+    display: none !important;
+}
+
+@media (min-width: 1024px) {
+    .admin-desktop-only.active {
+        display: block !important;
+    }
+}
+
 /* Previene lo zoom su iOS quando si tappa su input */
 * {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -1004,6 +1020,152 @@ div[class*="grid"] img {
 @media (min-width: 769px) {
     #bottom-nav {
         display: none;
+    }
+}
+
+/* ===================================
+   DESKTOP SIDEBAR NAVIGATION
+   Navigazione verticale fissa a sinistra su desktop
+   =================================== */
+
+#desktop-sidebar {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    width: 80px;
+    background-color: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid #1e3a8a;
+    border-radius: 16px;
+    z-index: 40;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.desktop-sidebar-content {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 0;
+    gap: 0.25rem;
+}
+
+.sidebar-nav-tab {
+    color: #9ca3af;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+    min-height: 60px;
+}
+
+.sidebar-nav-tab svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.sidebar-nav-tab span {
+    font-size: 0.6rem;
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+    display: block;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.sidebar-nav-tab:hover {
+    color: #60a5fa;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.sidebar-nav-tab.active {
+    color: #60a5fa;
+    background-color: rgba(59, 130, 246, 0.15);
+}
+
+.sidebar-nav-tab.active svg {
+    transform: scale(1.1);
+}
+
+.sidebar-nav-tab.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #3b82f6, #60a5fa);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 2px 0 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Mostra sidebar solo su desktop (lg: 1024px e superiori) */
+@media (max-width: 1023px) {
+    #desktop-sidebar {
+        display: none !important;
+    }
+}
+
+/* Padding sinistro per il contenuto su desktop quando c'è la sidebar */
+@media (min-width: 1024px) {
+    #app-content-area {
+        padding-left: 100px;
+    }
+}
+
+/* ===================================
+   DESKTOP STANDINGS TABLE
+   Tabella classifica estesa per desktop
+   =================================== */
+
+/* Header colonne ordinabili */
+.standings-sort-header {
+    position: relative;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.standings-sort-header:hover {
+    background-color: rgba(55, 65, 81, 0.8) !important;
+    color: #60a5fa !important;
+}
+
+.standings-sort-header:active {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Transizione smooth per le icone di ordinamento */
+.standings-sort-header svg {
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.standings-sort-header:hover svg {
+    opacity: 1 !important;
+}
+
+/* Stile righe tabella desktop */
+@media (min-width: 1024px) {
+    #standings-container table tbody tr {
+        transition: background-color 0.15s ease;
+    }
+    
+    #standings-container table tbody tr:hover {
+        background-color: rgba(55, 65, 81, 0.5) !important;
+    }
+    
+    /* Prima colonna fissa se scroll orizzontale */
+    #standings-container {
+        overflow-x: auto;
     }
 }
 

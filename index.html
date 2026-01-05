@@ -422,6 +422,34 @@
                         <h1 class="text-2xl sm:text-3xl font-bold text-blue-400">Settings</h1>
                     </div>
                     
+                    <!-- Tab Navigation Admin (solo desktop) -->
+                    <div id="admin-tabs-nav" class="hidden lg:flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-3">
+                        <button onclick="switchAdminTab('users')" id="admin-nav-users" class="admin-nav-tab px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 border-blue-500 text-blue-400 bg-gray-800/50">
+                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                            </svg>
+                            Utenti
+                        </button>
+                        <button onclick="switchAdminTab('schedules')" id="admin-nav-schedules" class="admin-nav-tab px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500">
+                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                            </svg>
+                            Orari
+                        </button>
+                        <button onclick="switchAdminTab('bets')" id="admin-nav-bets" class="admin-nav-tab px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500">
+                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"></path>
+                            </svg>
+                            Scommesse
+                        </button>
+                        <button onclick="switchAdminTab('data')" id="admin-nav-data" class="admin-nav-tab px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500">
+                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                            Dati CSV
+                        </button>
+                    </div>
+                    
                     <div class="card p-4 sm:p-6">
                     <!-- Contenuto Tab Admin -->
                     <div id="admin-content">
@@ -433,8 +461,8 @@
                             </div>
                         </div>
                         
-                        <!-- Tab Orari Giornate -->
-                        <div id="admin-tab-schedules-content" class="admin-tab-content hidden">
+                        <!-- Tab Orari Giornate (solo desktop) -->
+                        <div id="admin-tab-schedules-content" class="admin-tab-content admin-desktop-only hidden">
                             <h3 class="text-lg font-bold text-blue-400 mb-4">Orari Giornate</h3>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full text-sm">
@@ -458,8 +486,8 @@
                             </div>
                         </div>
                         
-                        <!-- Tab Scommesse -->
-                        <div id="admin-tab-bets-content" class="admin-tab-content hidden">
+                        <!-- Tab Scommesse (solo desktop) -->
+                        <div id="admin-tab-bets-content" class="admin-tab-content admin-desktop-only hidden">
                             <h3 class="text-lg font-bold text-blue-400 mb-4">Gestione Scommesse</h3>
                             <div class="flex gap-2 mb-4">
                                 <button id="filter-all" onclick="renderAdminBetsFilter('all')" class="btn-secondary px-3 py-1 text-sm">Tutte</button>
@@ -471,8 +499,8 @@
                             </div>
                         </div>
                         
-                        <!-- Tab Gestione Dati -->
-                        <div id="admin-tab-data-content" class="admin-tab-content hidden">
+                        <!-- Tab Gestione Dati (solo desktop) -->
+                        <div id="admin-tab-data-content" class="admin-tab-content admin-desktop-only hidden">
                             <h3 class="text-xl font-bold mb-4 text-yellow-400">Caricamento Dati CSV</h3>
                             <div class="flex flex-wrap items-center gap-4 mb-4">
                                 <label for="csv-file-input" class="sr-only">Seleziona file CSV</label>
@@ -692,11 +720,29 @@
                             <!-- Legenda colonne compatta -->
                             <div class="bg-gray-700/50 rounded-lg px-3 py-2 mb-4 text-xs">
                                 <span class="text-gray-400">Legenda: </span>
-                                <span class="text-blue-400">PV</span>=Punti | 
-                                <span class="text-blue-400">MV</span>=Media | 
+                                <span class="text-blue-400">PV</span>=Presenze | 
+                                <span class="text-blue-400">MV</span>=Media Voto | 
                                 <span class="text-blue-400">FM</span>=Fantamedia | 
-                                <span class="text-blue-400">GF</span>=Gol | 
+                                <span class="text-blue-400">GF</span>=Gol Fatti | 
+                                <span class="hidden lg:inline"><span class="text-blue-400">GS</span>=Gol Subiti | </span>
+                                <span class="hidden lg:inline"><span class="text-blue-400">RP</span>=Rig. Parati | </span>
+                                <span class="hidden lg:inline"><span class="text-blue-400">RC</span>=Rig. Calciati | </span>
+                                <span class="hidden lg:inline"><span class="text-blue-400">R+</span>=Rig. Segnati | </span>
+                                <span class="hidden lg:inline"><span class="text-blue-400">R-</span>=Rig. Sbagliati | </span>
                                 <span class="text-blue-400">ASS</span>=Assist
+                                <span class="hidden lg:inline"> | <span class="text-blue-400">AMM</span>=Ammonizioni | </span>
+                                <span class="hidden lg:inline"><span class="text-blue-400">ESP</span>=Espulsioni | </span>
+                                <span class="hidden lg:inline"><span class="text-blue-400">AU</span>=Autogol</span>
+                            </div>
+                            
+                            <!-- Pulsante Schermo Intero (solo mobile) -->
+                            <div class="lg:hidden mb-3 flex justify-end">
+                                <button onclick="openPlayerStatsFullscreen()" class="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                    </svg>
+                                    Schermo intero
+                                </button>
                             </div>
                             
                             <!-- Tabella statistiche -->
@@ -705,12 +751,22 @@
                                     <thead>
                                         <tr class="bg-gray-700 text-gray-400 sticky top-0">
                                             <th class="px-2 py-2 text-left cursor-pointer hover:bg-gray-600" onclick="sortPlayerStatsInline('playerName')">CALCIATORE</th>
-                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600" onclick="sortPlayerStatsInline('fantaSquad')">ROSA</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('serieATeam')">SQUADRA</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('fantaSquad')">ROSA</th>
                                             <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600" onclick="sortPlayerStatsInline('role')">R</th>
                                             <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600" onclick="sortPlayerStatsInline('pv')">PV</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600" onclick="sortPlayerStatsInline('mv')">MV</th>
                                             <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600" onclick="sortPlayerStatsInline('fm')">FM</th>
-                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600" onclick="sortPlayerStatsInline('gf')">GF</th>
-                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600" onclick="sortPlayerStatsInline('ass')">ASS</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('gf')">GF</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('gs')">GS</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('rp')">RP</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('rc')">RC</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('rPlus')">R+</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('rMinus')">R-</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('ass')">ASS</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('amm')">AMM</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('esp')">ESP</th>
+                                            <th class="px-2 py-2 text-center cursor-pointer hover:bg-gray-600 hidden lg:table-cell" onclick="sortPlayerStatsInline('au')">AU</th>
                                         </tr>
                                     </thead>
                                     <tbody id="player-stats-table-inline" class="text-gray-300"></tbody>
@@ -739,6 +795,33 @@
                     <!-- SOTTOSEZIONE: Andamento Classifica -->
                     <div id="league-sub-standings" class="hidden">
                         <div class="card p-4 sm:p-6">
+                            <!-- Filtri intervallo giornate -->
+                            <div class="flex flex-wrap items-center gap-3 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <label for="chart-from-giornata" class="text-sm text-gray-400">Da:</label>
+                                    <select id="chart-from-giornata" class="bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-white text-sm" onchange="filterChartByGiornata()">
+                                        <option value="1">G1</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label for="chart-to-giornata" class="text-sm text-gray-400">A:</label>
+                                    <select id="chart-to-giornata" class="bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-white text-sm" onchange="filterChartByGiornata()">
+                                        <option value="38">G38</option>
+                                    </select>
+                                </div>
+                                <button onclick="resetChartFilter()" class="text-xs text-blue-400 hover:text-blue-300 underline">Reset</button>
+                                
+                                <!-- Pulsante Schermo Intero (solo mobile) -->
+                                <div class="lg:hidden ml-auto">
+                                    <button onclick="openChartFullscreen()" class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                        </svg>
+                                        Schermo intero
+                                    </button>
+                                </div>
+                            </div>
+                            
                             <div id="standings-trend-container-inline" class="relative" style="min-height: 350px;">
                                 <canvas id="standings-trend-chart-inline"></canvas>
                                 <p id="standings-trend-placeholder-inline" class="text-sm text-gray-500 text-center py-4 absolute inset-0 flex items-center justify-center">
@@ -1139,6 +1222,54 @@
                 </div>
             </nav>
 
+            <!-- ========================================
+                 DESKTOP SIDEBAR NAVIGATION
+                 ======================================== -->
+            <nav id="desktop-sidebar" class="hidden lg:flex">
+                <div class="desktop-sidebar-content">
+                    <!-- Tab Home -->
+                    <button onclick="switchBottomNavTab('home')" id="sidebar-tab-home" class="sidebar-nav-tab active" title="Home">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h12a1 1 0 001-1v-10M9 21h6v-6a1 1 0 011-1h2a1 1 0 011 1v6"></path>
+                        </svg>
+                        <span>Home</span>
+                    </button>
+
+                    <!-- Tab Dati Lega -->
+                    <button onclick="switchBottomNavTab('league_data')" id="sidebar-tab-league-data" class="sidebar-nav-tab" title="Dati Lega">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
+                        </svg>
+                        <span>Dati Lega</span>
+                    </button>
+
+                    <!-- Tab Scommesse -->
+                    <button onclick="switchBottomNavTab('betting')" id="sidebar-tab-betting" class="sidebar-nav-tab" title="Scommesse">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Scommesse</span>
+                    </button>
+
+                    <!-- Tab Utente -->
+                    <button onclick="switchBottomNavTab('user')" id="sidebar-tab-user" class="sidebar-nav-tab" title="Utente">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>Profilo</span>
+                    </button>
+
+                    <!-- Tab Settings -->
+                    <button onclick="switchBottomNavTab('settings')" id="sidebar-tab-settings" class="sidebar-nav-tab" title="Settings">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span>Settings</span>
+                    </button>
+                </div>
+            </nav>
+
         </div> <!-- fine main-app-container -->
     </div> <!-- fine contenitore principale -->
     
@@ -1282,6 +1413,38 @@
             confirmCallback = null;
         }
         
+        /**
+         * Cambia il tab interno alla sezione Admin (solo desktop)
+         * @param {string} tab - users, schedules, bets, data
+         */
+        function switchAdminTab(tab) {
+            // Nascondi tutti i contenuti admin
+            document.querySelectorAll('.admin-tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('active');
+            });
+            
+            // Rimuovi stato attivo da tutti i tab nav
+            document.querySelectorAll('.admin-nav-tab').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-400', 'bg-gray-800/50');
+                btn.classList.add('border-transparent', 'text-gray-400');
+            });
+            
+            // Mostra il contenuto selezionato
+            const contentEl = document.getElementById(`admin-tab-${tab}-content`);
+            if (contentEl) {
+                contentEl.classList.remove('hidden');
+                contentEl.classList.add('active');
+            }
+            
+            // Attiva il tab nav selezionato
+            const navBtn = document.getElementById(`admin-nav-${tab}`);
+            if (navBtn) {
+                navBtn.classList.remove('border-transparent', 'text-gray-400');
+                navBtn.classList.add('border-blue-500', 'text-blue-400', 'bg-gray-800/50');
+            }
+        }
+        
         // Esponi globalmente per l'uso dai moduli
         window.showDataAnalysisMenu = showDataAnalysisMenu;
         window.closeDataAnalysisModal = closeDataAnalysisModal;
@@ -1290,6 +1453,7 @@
         window.showConfirmModal = showConfirmModal;
         window.cancelConfirm = cancelConfirm;
         window.executeConfirm = executeConfirm;
+        window.switchAdminTab = switchAdminTab;
 
         // ========================================
         // BOTTOM NAVIGATION TAB SWITCHING
@@ -1334,22 +1498,27 @@
             document.getElementById('squads-container')?.classList.add('hidden');
             document.getElementById('league-stats-container')?.classList.add('hidden');
             
-            // Rimuovi active da tutti i tab della bottom nav
+            // Rimuovi active da tutti i tab della bottom nav e sidebar
             document.querySelectorAll('.bottom-nav-tab').forEach(btn => {
                 btn.classList.remove('active');
             });
+            document.querySelectorAll('.sidebar-nav-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
             
-            // Mostra il tab selezionato e metti active
+            // Mostra il tab selezionato e metti active (su entrambe le nav)
             switch(tab) {
                 case 'home':
                     document.getElementById('home-container').classList.remove('hidden');
                     document.getElementById('nav-tab-home').classList.add('active');
+                    document.getElementById('sidebar-tab-home')?.classList.add('active');
                     updateTopNavTitle('Home');
                     break;
                 case 'league_data':
                     document.getElementById('league-data-container').classList.remove('hidden');
                     document.getElementById('league-data-tab-menu')?.classList.remove('hidden');
                     document.getElementById('nav-tab-league-data').classList.add('active');
+                    document.getElementById('sidebar-tab-league-data')?.classList.add('active');
                     updateTopNavTitle('Dati Lega');
                     // Carica i dati se non già caricati
                     if (window.renderHistoricResults) {
@@ -1362,18 +1531,21 @@
                 case 'betting':
                     document.getElementById('betting-container').classList.remove('hidden');
                     document.getElementById('nav-tab-betting').classList.add('active');
+                    document.getElementById('sidebar-tab-betting')?.classList.add('active');
                     updateTopNavTitle('Scommesse');
                     break;
                 case 'user':
                     // Mostra profilo 
                     document.getElementById('profile-container').classList.remove('hidden');
                     document.getElementById('nav-tab-user').classList.add('active');
+                    document.getElementById('sidebar-tab-user')?.classList.add('active');
                     updateTopNavTitle('Profilo');
                     window.profileHasUnsavedChanges = false;
                     break;
                 case 'settings':
                     document.getElementById('admin-container').classList.remove('hidden');
                     document.getElementById('nav-tab-settings').classList.add('active');
+                    document.getElementById('sidebar-tab-settings')?.classList.add('active');
                     updateTopNavTitle('Settings');
                     break;
             }
@@ -1622,6 +1794,8 @@
                         if (window.standingsChartInline) {
                             window.standingsChartInline.destroy();
                         }
+                        // Reset dati originali per nuovo caricamento
+                        window.originalChartData = null;
                         // Ricrea con stessa configurazione
                         try {
                             const config = window.standingsTrendChartInstance.config;
@@ -1630,6 +1804,12 @@
                                 data: JSON.parse(JSON.stringify(config.data)),
                                 options: config.options
                             });
+                            // Popola i filtri giornata dopo la creazione del grafico
+                            setTimeout(() => {
+                                if (window.populateGiornataFilters) {
+                                    window.populateGiornataFilters();
+                                }
+                            }, 100);
                         } catch (e) {
                             console.error('Errore creazione grafico inline:', e);
                         }
@@ -1770,7 +1950,7 @@
             }
             
             if (playerStats.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-4">Nessuna statistica caricata</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="16" class="text-center text-gray-500 py-4">Nessuna statistica caricata</td></tr>';
                 return;
             }
             
@@ -1785,27 +1965,48 @@
                 });
             }
             
-            // Renderizza la tabella
+            // Renderizza la tabella con tutte le colonne su desktop
+            const isDesktop = window.innerWidth >= 1024;
             let html = '';
             playerStats.slice(0, 100).forEach(p => {
                 const name = p.playerName || p.nome || '';
+                const serieATeam = p.serieATeam || p.squadra || '';
                 const squad = p.fantaSquad || p.rosa || '';
                 const role = (p.role || p.ruolo || '').charAt(0).toUpperCase();
                 const pv = p.pv || p.puntiTotali || 0;
+                const mv = p.mv || p.mediaVoto || 0;
                 const fm = p.fm || p.fantamedia || 0;
                 const gf = p.gf || p.golFatti || 0;
+                const gs = p.gs || p.golSubiti || 0;
+                const rp = p.rp || p.rigoriParati || 0;
+                const rc = p.rc || p.rigoriCalciati || 0;
+                const rPlus = p.rPlus || p.rigoriSegnati || 0;
+                const rMinus = p.rMinus || p.rigoriSbagliati || 0;
                 const ass = p.ass || p.assist || 0;
+                const amm = p.amm || p.ammonizioni || 0;
+                const esp = p.esp || p.espulsioni || 0;
+                const au = p.au || p.autogol || 0;
                 
                 const roleColor = { P: 'yellow', D: 'blue', C: 'green', A: 'red' }[role] || 'gray';
                 
                 html += `<tr class="border-b border-gray-700 hover:bg-gray-700/50">
                     <td class="px-2 py-2 text-left font-medium">${name}</td>
-                    <td class="px-2 py-2 text-center text-xs">${squad}</td>
+                    <td class="px-2 py-2 text-center text-xs hidden lg:table-cell text-gray-400">${serieATeam}</td>
+                    <td class="px-2 py-2 text-center text-xs hidden lg:table-cell">${squad}</td>
                     <td class="px-2 py-2 text-center"><span class="px-2 py-1 rounded text-xs bg-${roleColor}-600/20 text-${roleColor}-400">${role}</span></td>
-                    <td class="px-2 py-2 text-center font-semibold text-blue-400">${pv}</td>
-                    <td class="px-2 py-2 text-center">${typeof fm === 'number' ? fm.toFixed(2) : fm}</td>
-                    <td class="px-2 py-2 text-center text-green-400">${gf}</td>
-                    <td class="px-2 py-2 text-center text-purple-400">${ass}</td>
+                    <td class="px-2 py-2 text-center font-semibold">${pv}</td>
+                    <td class="px-2 py-2 text-center text-cyan-400">${typeof mv === 'number' ? mv.toFixed(2) : mv}</td>
+                    <td class="px-2 py-2 text-center ${fm > 6 ? 'text-green-400 font-bold' : fm < 6 ? 'text-red-400' : ''}">${typeof fm === 'number' ? fm.toFixed(2) : fm}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${gf > 0 ? 'text-green-400 font-bold' : ''}">${gf}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${gs > 0 ? 'text-red-400' : ''}">${gs}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rp > 0 ? 'text-yellow-400 font-bold' : ''}">${rp}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell">${rc}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rPlus > 0 ? 'text-green-400 font-bold' : ''}">${rPlus}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rMinus > 0 ? 'text-red-400 font-bold' : ''}">${rMinus}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${ass > 0 ? 'text-purple-400 font-bold' : ''}">${ass}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${amm > 0 ? 'text-yellow-400' : ''}">${amm}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${esp > 0 ? 'text-red-500 font-bold' : ''}">${esp}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${au > 0 ? 'text-red-400' : ''}">${au}</td>
                 </tr>`;
             });
             
@@ -1836,37 +2037,86 @@
                 playerStats = playerStats.filter(p => (p.role || p.ruolo || '').charAt(0).toUpperCase() === roleFilter);
             }
             
-            // Re-render
+            // Re-render con tutte le colonne su desktop
+            const isDesktop = window.innerWidth >= 1024;
             let html = '';
             playerStats.slice(0, 100).forEach(p => {
                 const name = p.playerName || p.nome || '';
+                const serieATeam = p.serieATeam || p.squadra || '';
                 const squad = p.fantaSquad || p.rosa || '';
                 const role = (p.role || p.ruolo || '').charAt(0).toUpperCase();
                 const pv = p.pv || p.puntiTotali || 0;
+                const mv = p.mv || p.mediaVoto || 0;
                 const fm = p.fm || p.fantamedia || 0;
                 const gf = p.gf || p.golFatti || 0;
+                const gs = p.gs || p.golSubiti || 0;
+                const rp = p.rp || p.rigoriParati || 0;
+                const rc = p.rc || p.rigoriCalciati || 0;
+                const rPlus = p.rPlus || p.rigoriSegnati || 0;
+                const rMinus = p.rMinus || p.rigoriSbagliati || 0;
                 const ass = p.ass || p.assist || 0;
+                const amm = p.amm || p.ammonizioni || 0;
+                const esp = p.esp || p.espulsioni || 0;
+                const au = p.au || p.autogol || 0;
                 
                 const roleColor = { P: 'yellow', D: 'blue', C: 'green', A: 'red' }[role] || 'gray';
                 
                 html += `<tr class="border-b border-gray-700 hover:bg-gray-700/50">
                     <td class="px-2 py-2 text-left font-medium">${name}</td>
-                    <td class="px-2 py-2 text-center text-xs">${squad}</td>
+                    <td class="px-2 py-2 text-center text-xs hidden lg:table-cell text-gray-400">${serieATeam}</td>
+                    <td class="px-2 py-2 text-center text-xs hidden lg:table-cell">${squad}</td>
                     <td class="px-2 py-2 text-center"><span class="px-2 py-1 rounded text-xs bg-${roleColor}-600/20 text-${roleColor}-400">${role}</span></td>
-                    <td class="px-2 py-2 text-center font-semibold text-blue-400">${pv}</td>
-                    <td class="px-2 py-2 text-center">${typeof fm === 'number' ? fm.toFixed(2) : fm}</td>
-                    <td class="px-2 py-2 text-center text-green-400">${gf}</td>
-                    <td class="px-2 py-2 text-center text-purple-400">${ass}</td>
+                    <td class="px-2 py-2 text-center font-semibold">${pv}</td>
+                    <td class="px-2 py-2 text-center text-cyan-400">${typeof mv === 'number' ? mv.toFixed(2) : mv}</td>
+                    <td class="px-2 py-2 text-center ${fm > 6 ? 'text-green-400 font-bold' : fm < 6 ? 'text-red-400' : ''}">${typeof fm === 'number' ? fm.toFixed(2) : fm}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${gf > 0 ? 'text-green-400 font-bold' : ''}">${gf}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${gs > 0 ? 'text-red-400' : ''}">${gs}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rp > 0 ? 'text-yellow-400 font-bold' : ''}">${rp}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell">${rc}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rPlus > 0 ? 'text-green-400 font-bold' : ''}">${rPlus}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rMinus > 0 ? 'text-red-400 font-bold' : ''}">${rMinus}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${ass > 0 ? 'text-purple-400 font-bold' : ''}">${ass}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${amm > 0 ? 'text-yellow-400' : ''}">${amm}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${esp > 0 ? 'text-red-500 font-bold' : ''}">${esp}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${au > 0 ? 'text-red-400' : ''}">${au}</td>
                 </tr>`;
             });
             
-            tableBody.innerHTML = html || '<tr><td colspan="7" class="text-center text-gray-500 py-4">Nessun risultato</td></tr>';
+            tableBody.innerHTML = html || '<tr><td colspan="17" class="text-center text-gray-500 py-4">Nessun risultato</td></tr>';
         }
         window.filterPlayerStatsInline = filterPlayerStatsInline;
         
         // Variabili per ordinamento
         let playerStatsInlineSortColumn = 'pv';
         let playerStatsInlineSortAsc = false;
+        
+        // Funzione per aggiornare gli indicatori di ordinamento nelle intestazioni
+        function updatePlayerStatsInlineSortIndicators() {
+            const table = document.getElementById('player-stats-table-inline')?.closest('table');
+            if (!table) return;
+            
+            const headers = table.querySelectorAll('thead th');
+            headers.forEach(th => {
+                const onclick = th.getAttribute('onclick');
+                if (!onclick) return;
+                
+                const match = onclick.match(/sortPlayerStatsInline\('([^']+)'\)/);
+                if (!match) return;
+                
+                const colName = match[1];
+                
+                // Rimuovi frecce precedenti
+                const text = th.textContent.replace(/\s*[↑↓]\s*$/, '').trim();
+                
+                if (colName === playerStatsInlineSortColumn) {
+                    th.innerHTML = text + (playerStatsInlineSortAsc ? ' <span class="text-blue-400">↑</span>' : ' <span class="text-blue-400">↓</span>');
+                    th.classList.add('text-blue-400');
+                } else {
+                    th.textContent = text;
+                    th.classList.remove('text-blue-400');
+                }
+            });
+        }
         
         function sortPlayerStatsInline(column) {
             if (playerStatsInlineSortColumn === column) {
@@ -1875,6 +2125,9 @@
                 playerStatsInlineSortColumn = column;
                 playerStatsInlineSortAsc = false;
             }
+            
+            // Aggiorna gli indicatori visivi
+            updatePlayerStatsInlineSortIndicators();
             
             // Usa i dati globali (prova entrambe le fonti)
             let playerStats = window.currentPlayerStats || [];
@@ -1904,34 +2157,55 @@
                 return 0;
             });
             
-            // Re-render con i dati ordinati
+            // Re-render con i dati ordinati e tutte le colonne su desktop
             const tableBody = document.getElementById('player-stats-table-inline');
             if (!tableBody) return;
             
+            const isDesktop = window.innerWidth >= 1024;
             let html = '';
             playerStats.slice(0, 100).forEach(p => {
                 const name = p.playerName || p.nome || '';
+                const serieATeam = p.serieATeam || p.squadra || '';
                 const squad = p.fantaSquad || p.rosa || '';
                 const role = (p.role || p.ruolo || '').charAt(0).toUpperCase();
                 const pv = p.pv || p.puntiTotali || 0;
+                const mv = p.mv || p.mediaVoto || 0;
                 const fm = p.fm || p.fantamedia || 0;
                 const gf = p.gf || p.golFatti || 0;
+                const gs = p.gs || p.golSubiti || 0;
+                const rp = p.rp || p.rigoriParati || 0;
+                const rc = p.rc || p.rigoriCalciati || 0;
+                const rPlus = p.rPlus || p.rigoriSegnati || 0;
+                const rMinus = p.rMinus || p.rigoriSbagliati || 0;
                 const ass = p.ass || p.assist || 0;
+                const amm = p.amm || p.ammonizioni || 0;
+                const esp = p.esp || p.espulsioni || 0;
+                const au = p.au || p.autogol || 0;
                 
                 const roleColor = { P: 'yellow', D: 'blue', C: 'green', A: 'red' }[role] || 'gray';
                 
                 html += `<tr class="border-b border-gray-700 hover:bg-gray-700/50">
                     <td class="px-2 py-2 text-left font-medium">${name}</td>
-                    <td class="px-2 py-2 text-center text-xs">${squad}</td>
+                    <td class="px-2 py-2 text-center text-xs hidden lg:table-cell text-gray-400">${serieATeam}</td>
+                    <td class="px-2 py-2 text-center text-xs hidden lg:table-cell">${squad}</td>
                     <td class="px-2 py-2 text-center"><span class="px-2 py-1 rounded text-xs bg-${roleColor}-600/20 text-${roleColor}-400">${role}</span></td>
-                    <td class="px-2 py-2 text-center font-semibold text-blue-400">${pv}</td>
-                    <td class="px-2 py-2 text-center">${typeof fm === 'number' ? fm.toFixed(2) : fm}</td>
-                    <td class="px-2 py-2 text-center text-green-400">${gf}</td>
-                    <td class="px-2 py-2 text-center text-purple-400">${ass}</td>
+                    <td class="px-2 py-2 text-center font-semibold">${pv}</td>
+                    <td class="px-2 py-2 text-center text-cyan-400">${typeof mv === 'number' ? mv.toFixed(2) : mv}</td>
+                    <td class="px-2 py-2 text-center ${fm > 6 ? 'text-green-400 font-bold' : fm < 6 ? 'text-red-400' : ''}">${typeof fm === 'number' ? fm.toFixed(2) : fm}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${gf > 0 ? 'text-green-400 font-bold' : ''}">${gf}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${gs > 0 ? 'text-red-400' : ''}">${gs}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rp > 0 ? 'text-yellow-400 font-bold' : ''}">${rp}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell">${rc}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rPlus > 0 ? 'text-green-400 font-bold' : ''}">${rPlus}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${rMinus > 0 ? 'text-red-400 font-bold' : ''}">${rMinus}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${ass > 0 ? 'text-purple-400 font-bold' : ''}">${ass}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${amm > 0 ? 'text-yellow-400' : ''}">${amm}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${esp > 0 ? 'text-red-500 font-bold' : ''}">${esp}</td>
+                    <td class="px-2 py-2 text-center hidden lg:table-cell ${au > 0 ? 'text-red-400' : ''}">${au}</td>
                 </tr>`;
             });
             
-            tableBody.innerHTML = html || '<tr><td colspan="7" class="text-center text-gray-500 py-4">Nessun risultato</td></tr>';
+            tableBody.innerHTML = html || '<tr><td colspan="17" class="text-center text-gray-500 py-4">Nessun risultato</td></tr>';
         }
         window.sortPlayerStatsInline = sortPlayerStatsInline;
         
@@ -1999,6 +2273,144 @@
         }
         window.renderStandingsTrendInline = renderStandingsTrendInline;
         
+        /**
+         * Popola i select delle giornate in base ai dati disponibili
+         */
+        function populateGiornataFilters() {
+            const fromSelect = document.getElementById('chart-from-giornata');
+            const toSelect = document.getElementById('chart-to-giornata');
+            
+            if (!fromSelect || !toSelect) return;
+            
+            // Ottieni le giornate disponibili dal grafico
+            const sourceChart = window.standingsTrendChartInstance || window.standingsChartInline;
+            if (!sourceChart || !sourceChart.data || !sourceChart.data.labels) return;
+            
+            const labels = sourceChart.data.labels; // es. ["G1", "G2", "G3", ...]
+            
+            // Svuota e ripopola i select
+            fromSelect.innerHTML = '';
+            toSelect.innerHTML = '';
+            
+            labels.forEach((label, idx) => {
+                const giornataNum = idx + 1;
+                const optionFrom = document.createElement('option');
+                optionFrom.value = giornataNum;
+                optionFrom.textContent = label;
+                fromSelect.appendChild(optionFrom);
+                
+                const optionTo = document.createElement('option');
+                optionTo.value = giornataNum;
+                optionTo.textContent = label;
+                toSelect.appendChild(optionTo);
+            });
+            
+            // Imposta default: prima e ultima giornata
+            fromSelect.value = 1;
+            toSelect.value = labels.length;
+        }
+        window.populateGiornataFilters = populateGiornataFilters;
+        
+        /**
+         * Filtra il grafico in base all'intervallo selezionato
+         */
+        function filterChartByGiornata() {
+            const fromSelect = document.getElementById('chart-from-giornata');
+            const toSelect = document.getElementById('chart-to-giornata');
+            
+            if (!fromSelect || !toSelect) return;
+            
+            const fromGiornata = parseInt(fromSelect.value);
+            const toGiornata = parseInt(toSelect.value);
+            
+            // Valida l'intervallo
+            if (fromGiornata > toGiornata) {
+                toSelect.value = fromGiornata;
+                return filterChartByGiornata();
+            }
+            
+            // Ottieni il grafico sorgente con tutti i dati
+            const sourceChart = window.standingsTrendChartInstance || window.standingsChartInline;
+            if (!sourceChart || !sourceChart.data) return;
+            
+            // Se non abbiamo i dati originali, salvali
+            if (!window.originalChartData) {
+                window.originalChartData = {
+                    labels: [...sourceChart.data.labels],
+                    datasets: sourceChart.data.datasets.map(ds => ({
+                        ...ds,
+                        data: [...ds.data]
+                    }))
+                };
+            }
+            
+            // Calcola indici (0-based)
+            const startIdx = fromGiornata - 1;
+            const endIdx = toGiornata; // slice è esclusivo
+            
+            // Filtra labels
+            const filteredLabels = window.originalChartData.labels.slice(startIdx, endIdx);
+            
+            // Filtra datasets
+            const filteredDatasets = window.originalChartData.datasets.map(ds => ({
+                ...ds,
+                data: ds.data.slice(startIdx, endIdx)
+            }));
+            
+            // Aggiorna il grafico inline
+            if (window.standingsChartInline) {
+                window.standingsChartInline.data.labels = filteredLabels;
+                window.standingsChartInline.data.datasets = filteredDatasets;
+                window.standingsChartInline.update();
+            }
+            
+            // Aggiorna anche il grafico principale se visibile
+            if (window.standingsTrendChartInstance && window.standingsTrendChartInstance !== window.standingsChartInline) {
+                window.standingsTrendChartInstance.data.labels = filteredLabels;
+                window.standingsTrendChartInstance.data.datasets = filteredDatasets;
+                window.standingsTrendChartInstance.update();
+            }
+        }
+        window.filterChartByGiornata = filterChartByGiornata;
+        
+        /**
+         * Resetta il filtro alle giornate originali
+         */
+        function resetChartFilter() {
+            const fromSelect = document.getElementById('chart-from-giornata');
+            const toSelect = document.getElementById('chart-to-giornata');
+            
+            if (!fromSelect || !toSelect) return;
+            
+            // Ripristina i dati originali
+            if (window.originalChartData) {
+                if (window.standingsChartInline) {
+                    window.standingsChartInline.data.labels = [...window.originalChartData.labels];
+                    window.standingsChartInline.data.datasets = window.originalChartData.datasets.map(ds => ({
+                        ...ds,
+                        data: [...ds.data]
+                    }));
+                    window.standingsChartInline.update();
+                }
+                
+                if (window.standingsTrendChartInstance && window.standingsTrendChartInstance !== window.standingsChartInline) {
+                    window.standingsTrendChartInstance.data.labels = [...window.originalChartData.labels];
+                    window.standingsTrendChartInstance.data.datasets = window.originalChartData.datasets.map(ds => ({
+                        ...ds,
+                        data: [...ds.data]
+                    }));
+                    window.standingsTrendChartInstance.update();
+                }
+            }
+            
+            // Ripristina i select
+            fromSelect.value = 1;
+            if (window.originalChartData) {
+                toSelect.value = window.originalChartData.labels.length;
+            }
+        }
+        window.resetChartFilter = resetChartFilter;
+        
         // Esponi le funzioni globalmente
         window.switchBottomNavTab = switchBottomNavTab;
         window.switchLeagueDataTab = switchLeagueDataTab;
@@ -2006,10 +2418,435 @@
         window.goBackToLeagueMenu = goBackToLeagueMenu;
     </script>
 
+    <!-- Modal Fullscreen Statistiche Calciatori -->
+    <div id="player-stats-fullscreen-modal" class="hidden fixed inset-0 bg-black/95 z-50 overflow-auto">
+        <div class="min-h-screen p-4 pb-8">
+            <!-- Header del modal -->
+            <div class="flex justify-between items-center mb-4 sticky top-0 bg-black/90 backdrop-blur-sm py-3 px-3 rounded-lg z-10">
+                <h2 class="text-xl font-bold text-yellow-400">Statistiche Calciatori</h2>
+                <button onclick="closePlayerStatsFullscreen()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex-shrink-0">
+                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Chiudi
+                </button>
+            </div>
+            
+            <!-- Contenuto con scroll orizzontale -->
+            <div id="player-stats-fullscreen-content" class="bg-gray-900 rounded-lg p-2 overflow-x-auto"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Variabili per ordinamento fullscreen
+        let fullscreenSortColumn = 'pv';
+        let fullscreenSortAsc = false;
+        
+        function openPlayerStatsFullscreen() {
+            const modal = document.getElementById('player-stats-fullscreen-modal');
+            const content = document.getElementById('player-stats-fullscreen-content');
+            
+            if (modal && content) {
+                // Renderizza la tabella fullscreen con tutti i dati
+                renderFullscreenPlayerStatsTable();
+                modal.classList.remove('hidden');
+            }
+        }
+        
+        function renderFullscreenPlayerStatsTable() {
+            const content = document.getElementById('player-stats-fullscreen-content');
+            if (!content) return;
+            
+            // Ottieni i dati
+            let playerStats = window.currentPlayerStats || [];
+            if (playerStats.length === 0 && window.getPlayerStatsData) {
+                playerStats = [...(window.getPlayerStatsData() || [])];
+            } else {
+                playerStats = [...playerStats];
+            }
+            
+            // Applica filtri dalla tabella originale
+            const squadFilter = document.getElementById('stats-squad-filter-inline')?.value || 'all';
+            const roleFilter = document.getElementById('stats-role-filter-inline')?.value || 'all';
+            
+            if (squadFilter !== 'all') {
+                playerStats = playerStats.filter(p => (p.fantaSquad || p.rosa) === squadFilter);
+            }
+            if (roleFilter !== 'all') {
+                playerStats = playerStats.filter(p => (p.role || p.ruolo || '').charAt(0).toUpperCase() === roleFilter);
+            }
+            
+            // Ordina
+            playerStats.sort((a, b) => {
+                let valA = a[fullscreenSortColumn] || 0;
+                let valB = b[fullscreenSortColumn] || 0;
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return fullscreenSortAsc ? -1 : 1;
+                if (valA > valB) return fullscreenSortAsc ? 1 : -1;
+                return 0;
+            });
+            
+            // Genera HTML della tabella
+            const columns = [
+                { key: 'playerName', label: 'CALCIATORE', align: 'left', minW: '100px', maxW: '130px' },
+                { key: 'serieATeam', label: 'SQUADRA', align: 'center', minW: '70px', maxW: '90px' },
+                { key: 'fantaSquad', label: 'ROSA', align: 'center', maxW: '110px' },
+                { key: 'role', label: 'R', align: 'center', minW: '30px' },
+                { key: 'pv', label: 'PV', align: 'center' },
+                { key: 'mv', label: 'MV', align: 'center' },
+                { key: 'fm', label: 'FM', align: 'center' },
+                { key: 'gf', label: 'GF', align: 'center' },
+                { key: 'gs', label: 'GS', align: 'center' },
+                { key: 'rp', label: 'RP', align: 'center' },
+                { key: 'rc', label: 'RC', align: 'center' },
+                { key: 'rPlus', label: 'R+', align: 'center' },
+                { key: 'rMinus', label: 'R-', align: 'center' },
+                { key: 'ass', label: 'ASS', align: 'center' },
+                { key: 'amm', label: 'AMM', align: 'center' },
+                { key: 'esp', label: 'ESP', align: 'center' },
+                { key: 'au', label: 'AU', align: 'center' }
+            ];
+            
+            let html = '<div id="fullscreen-table-scroll" class="overflow-x-auto"><table class="min-w-full bg-gray-800 rounded-lg overflow-hidden text-xs" style="min-width: 1100px;">';
+            
+            // Header
+            html += '<thead><tr class="bg-gray-700 text-gray-400 sticky top-0">';
+            columns.forEach(col => {
+                const isActive = fullscreenSortColumn === col.key;
+                const arrow = isActive ? (fullscreenSortAsc ? ' ▲' : ' ▼') : '';
+                const activeClass = isActive ? 'text-blue-400' : '';
+                const style = col.minW ? `min-width:${col.minW};` : '';
+                const style2 = col.maxW ? `max-width:${col.maxW};overflow:hidden;text-overflow:ellipsis;` : '';
+                html += `<th class="px-2 py-2 text-${col.align} cursor-pointer hover:bg-gray-600 whitespace-nowrap ${activeClass}" style="${style}${style2}" onclick="sortFullscreenPlayerStats('${col.key}')">${col.label}${arrow}</th>`;
+            });
+            html += '</tr></thead>';
+            
+            // Body
+            html += '<tbody class="text-gray-300">';
+            playerStats.slice(0, 100).forEach((p, idx) => {
+                const name = p.playerName || p.nome || '';
+                const serieATeam = p.serieATeam || p.squadra || '';
+                const squad = p.fantaSquad || p.rosa || '';
+                const role = (p.role || p.ruolo || '').charAt(0).toUpperCase();
+                const pv = p.pv || p.puntiTotali || 0;
+                const mv = p.mv || p.mediaVoto || 0;
+                const fm = p.fm || p.fantamedia || 0;
+                const gf = p.gf || p.golFatti || 0;
+                const gs = p.gs || p.golSubiti || 0;
+                const rp = p.rp || p.rigoriParati || 0;
+                const rc = p.rc || p.rigoriCalciati || 0;
+                const rPlus = p.rPlus || p.rigoriSegnati || 0;
+                const rMinus = p.rMinus || p.rigoriSbagliati || 0;
+                const ass = p.ass || p.assist || 0;
+                const amm = p.amm || p.ammonizioni || 0;
+                const esp = p.esp || p.espulsioni || 0;
+                const au = p.au || p.autogol || 0;
+                
+                const roleColor = { P: 'yellow', D: 'blue', C: 'green', A: 'red' }[role] || 'gray';
+                const rowBg = idx % 2 === 1 ? 'bg-gray-750' : '';
+                
+                html += `<tr class="border-b border-gray-700 hover:bg-gray-700/50 ${rowBg}">
+                    <td class="px-2 py-2 text-left font-medium" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</td>
+                    <td class="px-2 py-2 text-center text-gray-400" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${serieATeam}</td>
+                    <td class="px-2 py-2 text-center" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${squad}</td>
+                    <td class="px-2 py-2 text-center"><span class="px-2 py-1 rounded text-xs bg-${roleColor}-600/20 text-${roleColor}-400">${role}</span></td>
+                    <td class="px-2 py-2 text-center font-semibold">${pv}</td>
+                    <td class="px-2 py-2 text-center text-cyan-400">${typeof mv === 'number' ? mv.toFixed(2) : mv}</td>
+                    <td class="px-2 py-2 text-center ${fm > 6 ? 'text-green-400 font-bold' : fm < 6 ? 'text-red-400' : ''}">${typeof fm === 'number' ? fm.toFixed(2) : fm}</td>
+                    <td class="px-2 py-2 text-center ${gf > 0 ? 'text-green-400 font-bold' : ''}">${gf}</td>
+                    <td class="px-2 py-2 text-center ${gs > 0 ? 'text-red-400' : ''}">${gs}</td>
+                    <td class="px-2 py-2 text-center ${rp > 0 ? 'text-yellow-400 font-bold' : ''}">${rp}</td>
+                    <td class="px-2 py-2 text-center">${rc}</td>
+                    <td class="px-2 py-2 text-center ${rPlus > 0 ? 'text-green-400 font-bold' : ''}">${rPlus}</td>
+                    <td class="px-2 py-2 text-center ${rMinus > 0 ? 'text-red-400 font-bold' : ''}">${rMinus}</td>
+                    <td class="px-2 py-2 text-center ${ass > 0 ? 'text-purple-400 font-bold' : ''}">${ass}</td>
+                    <td class="px-2 py-2 text-center ${amm > 0 ? 'text-yellow-400' : ''}">${amm}</td>
+                    <td class="px-2 py-2 text-center ${esp > 0 ? 'text-red-500 font-bold' : ''}">${esp}</td>
+                    <td class="px-2 py-2 text-center ${au > 0 ? 'text-red-400' : ''}">${au}</td>
+                </tr>`;
+            });
+            html += '</tbody></table></div>';
+            
+            content.innerHTML = html || '<p class="text-gray-500 text-center py-4">Nessun dato disponibile</p>';
+        }
+        
+        function sortFullscreenPlayerStats(column) {
+            // Salva posizione scroll orizzontale
+            const scrollContainer = document.getElementById('fullscreen-table-scroll');
+            const scrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+            
+            if (fullscreenSortColumn === column) {
+                fullscreenSortAsc = !fullscreenSortAsc;
+            } else {
+                fullscreenSortColumn = column;
+                fullscreenSortAsc = false;
+            }
+            renderFullscreenPlayerStatsTable();
+            
+            // Ripristina posizione scroll orizzontale
+            setTimeout(() => {
+                const newScrollContainer = document.getElementById('fullscreen-table-scroll');
+                if (newScrollContainer) {
+                    newScrollContainer.scrollLeft = scrollLeft;
+                }
+            }, 0);
+        }
+        window.sortFullscreenPlayerStats = sortFullscreenPlayerStats;
+        
+        function closePlayerStatsFullscreen() {
+            const modal = document.getElementById('player-stats-fullscreen-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+        
+        // Chiudi modal con tasto Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePlayerStatsFullscreen();
+                closeChartFullscreen();
+            }
+        });
+        
+        // Gestione suggerimento rotazione
+        function checkOrientation() {
+            const hint = document.getElementById('rotate-hint-stats');
+            const chartHint = document.getElementById('rotate-hint-chart');
+            if (hint) {
+                hint.style.display = window.innerHeight > window.innerWidth ? 'flex' : 'none';
+            }
+            if (chartHint) {
+                chartHint.style.display = window.innerHeight > window.innerWidth ? 'flex' : 'none';
+            }
+        }
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        
+        window.openPlayerStatsFullscreen = openPlayerStatsFullscreen;
+        window.closePlayerStatsFullscreen = closePlayerStatsFullscreen;
+    </script>
+    
+    <!-- Modal Fullscreen Grafico Andamento Classifica -->
+    <div id="chart-fullscreen-modal" class="hidden fixed inset-0 bg-black/95 z-50 overflow-auto">
+        <div class="min-h-screen p-4 pb-8">
+            <!-- Header del modal -->
+            <div class="flex items-center justify-between mb-4 sticky top-0 bg-black/90 backdrop-blur-sm py-3 px-3 rounded-lg z-10">
+                <h2 class="text-xl font-bold text-yellow-400">Andamento Classifica</h2>
+                <button onclick="closeChartFullscreen()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex-shrink-0">
+                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Chiudi
+                </button>
+            </div>
+            
+            <!-- Filtri intervallo giornate (fullscreen) -->
+            <div class="flex flex-wrap items-center gap-3 mb-4 bg-gray-800/50 rounded-lg p-3">
+                <div class="flex items-center gap-2">
+                    <label for="chart-fullscreen-from" class="text-sm text-gray-400">Da:</label>
+                    <select id="chart-fullscreen-from" class="bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-white text-sm" onchange="filterFullscreenChart()">
+                        <option value="1">G1</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="chart-fullscreen-to" class="text-sm text-gray-400">A:</label>
+                    <select id="chart-fullscreen-to" class="bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-white text-sm" onchange="filterFullscreenChart()">
+                        <option value="38">G38</option>
+                    </select>
+                </div>
+                <button onclick="resetFullscreenChartFilter()" class="text-xs text-blue-400 hover:text-blue-300 underline">Reset</button>
+            </div>
+            
+            <!-- Suggerimento rotazione -->
+            <div id="rotate-hint-chart" class="bg-blue-600/20 border border-blue-500/30 rounded-lg px-4 py-2 mb-4 flex items-center gap-2 text-blue-400 text-sm">
+                <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>Ruota il telefono per una visualizzazione migliore</span>
+            </div>
+            
+            <!-- Contenuto copiato dal grafico originale -->
+            <div id="chart-fullscreen-content" class="bg-gray-900 rounded-lg p-4" style="min-height: 400px;">
+                <canvas id="fullscreen-standings-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let fullscreenChartInstance = null;
+        
+        function openChartFullscreen() {
+            const modal = document.getElementById('chart-fullscreen-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            // Controlla orientamento
+            checkOrientation();
+            
+            // Ricrea il grafico nel modal fullscreen
+            setTimeout(() => {
+                renderFullscreenChart();
+            }, 100);
+        }
+        
+        function closeChartFullscreen() {
+            const modal = document.getElementById('chart-fullscreen-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            
+            // Distruggi il grafico fullscreen
+            if (fullscreenChartInstance) {
+                fullscreenChartInstance.destroy();
+                fullscreenChartInstance = null;
+            }
+        }
+        
+        function renderFullscreenChart() {
+            const canvas = document.getElementById('fullscreen-standings-chart');
+            if (!canvas) return;
+            
+            // Distruggi grafico esistente
+            if (fullscreenChartInstance) {
+                fullscreenChartInstance.destroy();
+                fullscreenChartInstance = null;
+            }
+            
+            // Prova a ottenere i dati da tutte le possibili fonti di grafico
+            // Cerca prima standingsTrendChartInstance (grafico della sezione Dati Lega)
+            // poi standingsChartInline (grafico inline)
+            const sourceChart = window.standingsTrendChartInstance || window.standingsChartInline;
+            
+            if (!sourceChart || !sourceChart.data || !sourceChart.data.datasets || sourceChart.data.datasets.length === 0) {
+                const container = document.getElementById('chart-fullscreen-content');
+                if (container) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">Nessun dato disponibile. Carica i risultati per visualizzare il grafico.</p>';
+                }
+                return;
+            }
+            
+            // Copia profonda dei dati dal grafico esistente
+            const chartData = JSON.parse(JSON.stringify(sourceChart.data));
+            const chartOptions = JSON.parse(JSON.stringify(sourceChart.options || {}));
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Adatta le opzioni per fullscreen
+            chartOptions.maintainAspectRatio = false;
+            chartOptions.responsive = true;
+            if (chartOptions.plugins && chartOptions.plugins.legend) {
+                chartOptions.plugins.legend.position = 'bottom';
+                chartOptions.plugins.legend.labels = {
+                    ...chartOptions.plugins.legend.labels,
+                    boxWidth: 12,
+                    padding: 8,
+                    font: { size: 10 }
+                };
+            }
+            
+            fullscreenChartInstance = new Chart(ctx, {
+                type: sourceChart.config ? sourceChart.config.type : 'line',
+                data: chartData,
+                options: chartOptions
+            });
+            
+            // Salva dati originali per il fullscreen
+            window.fullscreenOriginalChartData = {
+                labels: [...chartData.labels],
+                datasets: chartData.datasets.map(ds => ({
+                    ...ds,
+                    data: [...ds.data]
+                }))
+            };
+            
+            // Popola i filtri del fullscreen
+            populateFullscreenGiornataFilters();
+        }
+        
+        /**
+         * Popola i select delle giornate nel fullscreen
+         */
+        function populateFullscreenGiornataFilters() {
+            const fromSelect = document.getElementById('chart-fullscreen-from');
+            const toSelect = document.getElementById('chart-fullscreen-to');
+            
+            if (!fromSelect || !toSelect || !window.fullscreenOriginalChartData) return;
+            
+            const labels = window.fullscreenOriginalChartData.labels;
+            
+            // Svuota e ripopola
+            fromSelect.innerHTML = '';
+            toSelect.innerHTML = '';
+            
+            labels.forEach((label, idx) => {
+                const giornataNum = idx + 1;
+                fromSelect.innerHTML += `<option value="${giornataNum}">${label}</option>`;
+                toSelect.innerHTML += `<option value="${giornataNum}">${label}</option>`;
+            });
+            
+            fromSelect.value = 1;
+            toSelect.value = labels.length;
+        }
+        
+        /**
+         * Filtra il grafico fullscreen in base all'intervallo
+         */
+        function filterFullscreenChart() {
+            const fromSelect = document.getElementById('chart-fullscreen-from');
+            const toSelect = document.getElementById('chart-fullscreen-to');
+            
+            if (!fromSelect || !toSelect || !fullscreenChartInstance || !window.fullscreenOriginalChartData) return;
+            
+            const fromGiornata = parseInt(fromSelect.value);
+            const toGiornata = parseInt(toSelect.value);
+            
+            if (fromGiornata > toGiornata) {
+                toSelect.value = fromGiornata;
+                return filterFullscreenChart();
+            }
+            
+            const startIdx = fromGiornata - 1;
+            const endIdx = toGiornata;
+            
+            const filteredLabels = window.fullscreenOriginalChartData.labels.slice(startIdx, endIdx);
+            const filteredDatasets = window.fullscreenOriginalChartData.datasets.map(ds => ({
+                ...ds,
+                data: ds.data.slice(startIdx, endIdx)
+            }));
+            
+            fullscreenChartInstance.data.labels = filteredLabels;
+            fullscreenChartInstance.data.datasets = filteredDatasets;
+            fullscreenChartInstance.update();
+        }
+        window.filterFullscreenChart = filterFullscreenChart;
+        
+        /**
+         * Resetta il filtro fullscreen
+         */
+        function resetFullscreenChartFilter() {
+            const fromSelect = document.getElementById('chart-fullscreen-from');
+            const toSelect = document.getElementById('chart-fullscreen-to');
+            
+            if (!fromSelect || !toSelect || !fullscreenChartInstance || !window.fullscreenOriginalChartData) return;
+            
+            fullscreenChartInstance.data.labels = [...window.fullscreenOriginalChartData.labels];
+            fullscreenChartInstance.data.datasets = window.fullscreenOriginalChartData.datasets.map(ds => ({
+                ...ds,
+                data: [...ds.data]
+            }));
+            fullscreenChartInstance.update();
+            
+            fromSelect.value = 1;
+            toSelect.value = window.fullscreenOriginalChartData.labels.length;
+        }
+        window.resetFullscreenChartFilter = resetFullscreenChartFilter;
+        
+        window.openChartFullscreen = openChartFullscreen;
+        window.closeChartFullscreen = closeChartFullscreen;
+    </script>
+
     <!-- Footer versione -->
     <footer class="bg-gray-900 border-t border-gray-800 py-4 mt-8">
         <div class="text-center text-gray-500 text-sm">
-            <p>FantaBet v3.2</p>
+            <p>FantaBet v3.5</p>
             <p class="text-xs text-gray-600" id="update-timestamp"></p>
         </div>
     </footer>

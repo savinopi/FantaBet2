@@ -296,7 +296,8 @@ export const calculateStandings = (results) => {
 };
 
 /**
- * Renderizza la classifica
+ * Renderizza la classifica (versione responsive)
+ * Su mobile: versione compatta | Su desktop: versione estesa con ordinamento
  * @param {string|null} sortColumn - Colonna per ordinamento
  */
 export const renderStandings = (sortColumn = null) => {
@@ -334,15 +335,38 @@ export const renderStandings = (sortColumn = null) => {
         });
     }
     
-    // Genera HTML classifica semplice
+    // Verifica se è desktop (>= 1024px)
+    const isDesktop = window.innerWidth >= 1024;
+    
+    if (isDesktop) {
+        // Versione desktop estesa con ordinamento
+        container.innerHTML = generateDesktopStandingsHtml(standings);
+    } else {
+        // Versione mobile compatta
+        container.innerHTML = generateMobileStandingsHtml(standings);
+    }
+    
+    // Aggiorna anche la classifica fullscreen se aperta
+    const fullscreenContent = document.getElementById('standings-fullscreen-content');
+    if (fullscreenContent) {
+        fullscreenContent.innerHTML = generateFullStandingsHtml(standings);
+    }
+};
+
+/**
+ * Genera HTML per classifica mobile compatta
+ * @param {Array} standings - Classifica
+ * @returns {string} HTML
+ */
+const generateMobileStandingsHtml = (standings) => {
     // Calcola quanti caratteri mostrare in base alla risoluzione dello schermo
     const getMaxTeamNameLength = () => {
         const width = window.innerWidth;
-        if (width < 360) return 10;  // Extra small phones
-        if (width < 480) return 13;  // Small phones
-        if (width < 640) return 16;  // Medium phones
-        if (width < 768) return 20;  // Tablets
-        return 25; // Desktop
+        if (width < 360) return 10;
+        if (width < 480) return 13;
+        if (width < 640) return 16;
+        if (width < 768) return 20;
+        return 25;
     };
     
     let html = `<div class="bg-gray-900 rounded">
@@ -390,14 +414,110 @@ export const renderStandings = (sortColumn = null) => {
     });
     
     html += `</div>`;
-    
-    container.innerHTML = html;
-    
-    // Aggiorna anche la classifica fullscreen se aperta
-    const fullscreenContent = document.getElementById('standings-fullscreen-content');
-    if (fullscreenContent) {
-        fullscreenContent.innerHTML = generateFullStandingsHtml(standings);
+    return html;
+};
+
+/**
+ * Genera indicatore ordinamento (freccia testuale)
+ * @param {string} column - Colonna
+ * @returns {string} HTML indicatore
+ */
+const getSortIndicator = (column) => {
+    if (state.standingsSortColumn !== column) {
+        return '';
     }
+    if (state.standingsSortDirection === 'asc') {
+        return ' <span class="text-blue-400 font-bold">↑</span>';
+    }
+    return ' <span class="text-blue-400 font-bold">↓</span>';
+};
+
+/**
+ * Genera HTML per classifica desktop estesa con ordinamento
+ * @param {Array} standings - Classifica
+ * @returns {string} HTML
+ */
+const generateDesktopStandingsHtml = (standings) => {
+    const columns = [
+        { key: null, label: '#', sortable: false, width: 'w-12', align: 'text-center' },
+        { key: null, label: '', sortable: false, width: 'w-12', align: 'text-center' }, // Logo
+        { key: 'team', label: 'Squadra', sortable: true, width: 'min-w-[180px]', align: 'text-left' },
+        { key: 'points', label: 'Pt', sortable: true, width: 'w-14', align: 'text-center', color: 'text-blue-400' },
+        { key: 'fantasyPoints', label: 'FPt', sortable: true, width: 'w-16', align: 'text-center', color: 'text-green-400' },
+        { key: 'played', label: 'G', sortable: true, width: 'w-12', align: 'text-center' },
+        { key: 'wins', label: 'V', sortable: true, width: 'w-12', align: 'text-center', color: 'text-green-400' },
+        { key: 'draws', label: 'P', sortable: true, width: 'w-12', align: 'text-center', color: 'text-yellow-400' },
+        { key: 'losses', label: 'S', sortable: true, width: 'w-12', align: 'text-center', color: 'text-red-400' },
+        { key: 'goalsFor', label: 'GF', sortable: true, width: 'w-12', align: 'text-center' },
+        { key: 'goalsAgainst', label: 'GS', sortable: true, width: 'w-12', align: 'text-center' },
+        { key: 'goalDiff', label: 'DR', sortable: true, width: 'w-14', align: 'text-center' }
+    ];
+    
+    let html = `<div class="bg-gray-900 rounded-lg overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-800 text-gray-400 text-xs uppercase">
+                <tr>`;
+    
+    columns.forEach(col => {
+        if (col.sortable) {
+            const isActive = state.standingsSortColumn === col.key;
+            const activeClass = isActive ? 'text-blue-400 bg-gray-700' : '';
+            html += `<th class="px-2 py-3 ${col.width} ${col.align} cursor-pointer hover:bg-gray-700 hover:text-blue-400 transition-colors select-none standings-sort-header ${activeClass}" data-sort="${col.key}">
+                ${col.label}${getSortIndicator(col.key)}
+            </th>`;
+        } else {
+            html += `<th class="px-2 py-3 ${col.width} ${col.align}">${col.label}</th>`;
+        }
+    });
+    
+    html += `</tr></thead><tbody class="divide-y divide-gray-700">`;
+    
+    standings.forEach((team, index) => {
+        const pos = index + 1;
+        let posClass = 'text-gray-400';
+        if (pos === 1) posClass = 'text-yellow-400 font-bold';
+        else if (pos === 2) posClass = 'text-gray-300 font-semibold';
+        else if (pos === 3) posClass = 'text-orange-400 font-semibold';
+        
+        const goalDiff = team.goalsFor - team.goalsAgainst;
+        const goalDiffText = goalDiff > 0 ? `+${goalDiff}` : goalDiff.toString();
+        const goalDiffClass = goalDiff > 0 ? 'text-green-400' : goalDiff < 0 ? 'text-red-400' : 'text-gray-400';
+        
+        html += `
+            <tr class="hover:bg-gray-800/50 transition-colors cursor-pointer" onclick="showTeamStats('${team.team.replace(/'/g, "\\'")}')">
+                <td class="px-2 py-3 text-center ${posClass} font-bold">${pos}</td>
+                <td class="px-2 py-3 text-center">
+                    <img src="${getTeamLogo(team.team)}" alt="${team.team}" class="w-7 h-7 object-contain mx-auto" onerror="this.style.display='none'">
+                </td>
+                <td class="px-2 py-3 text-left font-semibold text-white">${team.team}</td>
+                <td class="px-2 py-3 text-center font-bold text-blue-400">${team.points}</td>
+                <td class="px-2 py-3 text-center font-semibold text-green-400">${team.fantasyPoints.toFixed(1)}</td>
+                <td class="px-2 py-3 text-center">${team.played}</td>
+                <td class="px-2 py-3 text-center text-green-400">${team.wins}</td>
+                <td class="px-2 py-3 text-center text-yellow-400">${team.draws}</td>
+                <td class="px-2 py-3 text-center text-red-400">${team.losses}</td>
+                <td class="px-2 py-3 text-center">${team.goalsFor}</td>
+                <td class="px-2 py-3 text-center">${team.goalsAgainst}</td>
+                <td class="px-2 py-3 text-center ${goalDiffClass} font-semibold">${goalDiffText}</td>
+            </tr>
+        `;
+    });
+    
+    html += `</tbody></table></div>`;
+    
+    // Aggiungi event listener dopo il rendering
+    setTimeout(() => {
+        document.querySelectorAll('.standings-sort-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                const sortKey = e.currentTarget.dataset.sort;
+                if (sortKey) {
+                    renderStandings(sortKey);
+                }
+            });
+        });
+    }, 0);
+    
+    return html;
 };
 
 /**

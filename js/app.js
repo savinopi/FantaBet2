@@ -1098,6 +1098,18 @@ export const initializeApp = () => {
     });
     
     setupFirebase();
+    
+    // Listener per resize finestra - aggiorna classifica per layout responsivo
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            // Re-render classifica solo se ci sono dati
+            if (state.allResults && state.allResults.length > 0) {
+                renderStandings();
+            }
+        }, 250); // Debounce 250ms
+    });
 };
 
 // Fallback per caricamento diretto

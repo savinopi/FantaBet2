@@ -1,8 +1,27 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.4**
+**Versione: 3.5**
 
-## 🆕 Changelog v3.4
+## 🆕 Changelog v3.5
+
+### Miglioramenti Mobile
+- **Statistiche Calciatori Fullscreen**: Tabella completa con scroll orizzontale, ordinamento dinamico funzionante, mantenimento posizione scroll durante ordinamento
+- **Filtri Andamento Classifica**: Selettori "Da" e "A" per visualizzare intervallo giornate specifico
+- **Colonne ottimizzate**: Gestione nomi lunghi con ellipsis (Calciatore, Squadra, Rosa)
+
+### Sezione Settings/Admin
+- **Tabs di navigazione desktop**: Utenti, Orari, Scommesse, Dati CSV
+- **Sottosezioni nascoste su mobile**: Orari, Scommesse e Dati CSV visibili solo su desktop (≥1024px)
+- **Gestione Utenti sempre visibile** su tutte le piattaforme
+
+### Bugfix
+- Corretto fullscreen grafico "Andamento Classifica" che mostrava "Nessun dato disponibile"
+- Corretto fullscreen statistiche che faceva sparire la tabella alla chiusura
+- Rimosso codice duplicato residuo
+
+---
+
+## 📜 Changelog v3.4
 
 ### Redesign Sezione Scommesse
 - **Layout responsivo orizzontale** per le opzioni di scommessa (1, X, 2) su una sola riga
