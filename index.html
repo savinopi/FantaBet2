@@ -268,8 +268,8 @@
                         </div>
                         <div class="flex-1">
                             <p class="text-sm text-gray-400">Benvenuto,</p>
-                            <h2 id="user-team-name" class="text-lg sm:text-xl font-bold text-yellow-400">Caricamento...</h2>
-                            <p id="user-team-position" class="text-xs sm:text-sm text-gray-500 mt-1"></p>
+                            <h2 id="user-team-name" class="text-lg sm:text-xl font-bold text-white">Caricamento...</h2>
+                            <span id="user-team-position" class="hidden inline-block mt-2 px-3 py-1 bg-yellow-500 text-gray-900 text-xs sm:text-sm font-bold rounded-full"></span>
                         </div>
                     </div>
 
@@ -340,9 +340,19 @@
                     
                     <!-- Input puntata e pulsante conferma -->
                     <div class="mt-6 space-y-4">
+                        <!-- Crediti e Puntata sulla stessa riga -->
                         <div class="flex flex-col sm:flex-row gap-4">
+                            <!-- Crediti disponibili -->
+                            <div id="bet-credits-display" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-yellow-900/30 rounded-lg border border-yellow-700/50">
+                                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979a1 1 0 001.715-1.029C12.279 4.784 11.232 4 10 4s-2.279.784-2.979 1.95c-.285.475-.507 1-.67 1.55H6a1 1 0 000 2h.013a9.358 9.358 0 000 1H6a1 1 0 100 2h.351c.163.55.385 1.075.67 1.55C7.721 15.216 8.768 16 10 16s2.279-.784 2.979-1.95a1 1 0 10-1.715-1.029c-.472.786-.96.979-1.264.979-.304 0-.792-.193-1.264-.979a4.265 4.265 0 01-.264-.521H10a1 1 0 100-2H8.017a7.36 7.36 0 010-1H10a1 1 0 100-2H8.472c.08-.185.167-.36.264-.521z"></path>
+                                </svg>
+                                <span class="text-xs sm:text-sm text-gray-400">Crediti:</span>
+                                <span id="bet-user-credits" class="text-lg font-bold text-yellow-400">0</span>
+                            </div>
+                            <!-- Puntata -->
                             <div class="flex-1">
-                                <label for="bet-stake-input" class="block text-sm font-medium text-gray-400 mb-2">Puntata totale per la giornata</label>
+                                <label for="bet-stake-input" class="block text-sm font-medium text-gray-400 mb-2">Puntata totale</label>
                                 <input type="number" id="bet-stake-input" min="1" placeholder="Inserisci puntata" class="w-full" onkeyup="updateGiornataBetButton()">
                             </div>
                         </div>
@@ -411,6 +421,14 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                             Salva Profilo
+                        </button>
+                        
+                        <!-- Tasto Logout -->
+                        <button onclick="handleLogout()" class="w-full mt-4 py-2 text-base font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                            Logout
                         </button>
                     </div>
                 </div>
@@ -2846,7 +2864,7 @@
     <!-- Footer versione -->
     <footer class="bg-gray-900 border-t border-gray-800 py-4 mt-8">
         <div class="text-center text-gray-500 text-sm">
-            <p>FantaBet v3.5</p>
+            <p>FantaBet v3.6</p>
             <p class="text-xs text-gray-600" id="update-timestamp"></p>
         </div>
     </footer>

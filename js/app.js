@@ -259,14 +259,14 @@ const updateHomeWelcome = (userProfile) => {
             const standings = calculateStandings(state.getAllResults());
             if (standings && standings.length > 0) {
                 const position = standings.findIndex(s => s.team === squadName) + 1;
-                const totalTeams = standings.length;
                 if (position > 0) {
-                    teamPositionEl.textContent = `Posizione attuale: ${position}/${totalTeams}`;
+                    teamPositionEl.textContent = `#${position} in classifica`;
+                    teamPositionEl.classList.remove('hidden');
                 } else {
-                    teamPositionEl.textContent = '';
+                    teamPositionEl.classList.add('hidden');
                 }
             } else {
-                teamPositionEl.textContent = '';
+                teamPositionEl.classList.add('hidden');
             }
         }
     } else {

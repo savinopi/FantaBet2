@@ -1,8 +1,23 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.5**
+**Versione: 3.6**
 
-## 🆕 Changelog v3.5
+## 🆕 Changelog v3.6
+
+### Sezione Profilo
+- **Pulsante Logout**: Aggiunto pulsante rosso per disconnettersi dall'account
+
+### Home Welcome
+- **Badge posizione classifica**: Mostrato come pillola gialla "#X in classifica" sotto il nome squadra
+- **Layout migliorato**: Nome squadra in bianco, badge posizione in evidenza
+
+### Sezione Scommesse
+- **Crediti disponibili**: Visualizzazione crediti utente prima dell'input puntata
+- **Layout compatto**: Crediti e Puntata sulla stessa riga (responsive)
+
+---
+
+## 📜 Changelog v3.5
 
 ### Miglioramenti Mobile
 - **Statistiche Calciatori Fullscreen**: Tabella completa con scroll orizzontale, ordinamento dinamico funzionante, mantenimento posizione scroll durante ordinamento

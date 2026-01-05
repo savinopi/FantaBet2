@@ -91,12 +91,18 @@ export const updateGiornataBetButton = () => {
     const button = document.getElementById('place-giornata-bet-button');
     const stakeInput = document.getElementById('bet-stake-input');
     const winPreviewEl = document.getElementById('win-preview');
+    const creditsDisplayEl = document.getElementById('bet-user-credits');
     
     if (!button || !stakeInput) return;
 
     const openMatches = getOpenMatches();
     const currentPredictions = getCurrentPredictions();
     const userCredits = getUserCredits();
+    
+    // Aggiorna il display dei crediti
+    if (creditsDisplayEl) {
+        creditsDisplayEl.textContent = userCredits;
+    }
     
     const requiredMatches = openMatches.length;
     const predictedMatches = Object.keys(currentPredictions).length;
