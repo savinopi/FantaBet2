@@ -238,6 +238,7 @@ const setupSectionHeaders = () => {
 const updateHomeWelcome = (userProfile) => {
     const teamLogoEl = document.getElementById('user-team-logo');
     const teamNameEl = document.getElementById('user-team-name');
+    const teamPositionEl = document.getElementById('user-team-position');
     
     if (!teamLogoEl || !teamNameEl) return;
     
@@ -252,11 +253,28 @@ const updateHomeWelcome = (userProfile) => {
         
         // Imposta nome squadra
         teamNameEl.textContent = squadName;
+        
+        // Calcola e mostra posizione in classifica
+        if (teamPositionEl) {
+            const standings = calculateStandings(state.getAllResults());
+            if (standings && standings.length > 0) {
+                const position = standings.findIndex(s => s.team === squadName) + 1;
+                const totalTeams = standings.length;
+                if (position > 0) {
+                    teamPositionEl.textContent = `Posizione attuale: ${position}/${totalTeams}`;
+                } else {
+                    teamPositionEl.textContent = '';
+                }
+            } else {
+                teamPositionEl.textContent = '';
+            }
+        }
     } else {
         // Nessuna squadra assegnata
         teamLogoEl.src = 'https://raw.githubusercontent.com/savinopi/FantaBet2/main/assets/esempio%20stemma%20lega.png';
         teamLogoEl.alt = 'Logo Lega';
         teamNameEl.textContent = displayName;
+        if (teamPositionEl) teamPositionEl.textContent = '';
     }
 };
 

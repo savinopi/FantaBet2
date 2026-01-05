@@ -1,8 +1,27 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.3**
+**Versione: 3.4**
 
-## 🆕 Changelog v3.3
+## 🆕 Changelog v3.4
+
+### Redesign Sezione Scommesse
+- **Layout responsivo orizzontale** per le opzioni di scommessa (1, X, 2) su una sola riga
+- **Titolo sezione migliorato**: "Scommetti su: Giornata X (Y Partite)" in giallo con data grigia
+- **Squadre in layout compatto**:
+  - Logo + nome della squadra in verticale su mobile (<480px)
+  - Layout flex orizzontale con separatore "vs"
+  - Font size responsive: text-sm su mobile, text-lg su desktop
+- **Opzioni scommessa**:
+  - Flex layout su una riga con gap minimalista
+  - Padding ridotto su mobile (p-1) per compattezza
+  - Mostra "Quota: X.XX" sotto ogni opzione
+- **Nav bar**: Icona Home cambiata con una casa pulita e minimale
+- **Scommesse nella nav**: Testo centrato rispetto all'icona, no capo a riga
+- **CSS ottimizzato**: Ridotto padding/gap per mobile <480px, mantenuto look desktop
+
+---
+
+## 📜 Changelog v3.3
 
 ### Redesign Sezione Home
 - **Welcome personalizzato** con logo e nome della rosa dell'utente

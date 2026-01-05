@@ -176,50 +176,35 @@ export const renderHistoricResults = (results) => {
                 }
 
                 html += `
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-3 hover:bg-gray-750 transition-colors cursor-pointer">
-                        <div class="flex items-center justify-between">
-                            <!-- Home Team -->
-                            <div class="flex items-center flex-1 gap-3">
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-3 sm:p-4 mb-3 hover:bg-gray-750 transition-colors cursor-pointer">
+                        <!-- Flex Layout (Horizontal) -->
+                        <div class="flex items-center justify-between gap-1 sm:gap-3">
+                            <!-- Home Team (Left) -->
+                            <div class="flex flex-col items-center min-w-0 flex-1">
                                 ${homeLogo ? `
-                                    <img src="${homeLogo}" alt="${res.homeTeam}" class="w-10 h-10 object-contain ${homeTeamLogoOpacity}" onerror="this.style.display='none'">
+                                    <img src="${homeLogo}" alt="${res.homeTeam}" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-0.5 sm:mb-1 flex-shrink-0 ${homeTeamLogoOpacity}" onerror="this.style.display='none'">
                                 ` : ''}
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-bold ${homeTeamClass} truncate">${res.homeTeam}</p>
+                                <p class="text-xs font-bold ${homeTeamClass} truncate w-full text-center">${res.homeTeam}</p>
+                            </div>
+
+                            <!-- Score (Center) -->
+                            <div class="flex flex-col items-center justify-center gap-0.5 sm:gap-1 flex-shrink-0">
+                                <div class="text-2xl sm:text-3xl font-black ${scoreColor} leading-none">
+                                    ${res.score ? res.score.split('-').map(s => s.trim()).join('-') : '-'}
+                                </div>
+                                <div class="flex gap-0.5 text-xs text-gray-500">
+                                    <span>${res.homePoints || '-'}</span>
+                                    <span class="text-gray-600">|</span>
+                                    <span>${res.awayPoints || '-'}</span>
                                 </div>
                             </div>
 
-                            <!-- Score -->
-                            <div class="flex items-center gap-3 mx-4">
-                                <div class="text-center">
-                                    <div class="text-2xl font-black ${scoreColor}">
-                                        ${res.score ? res.score.split('-').map(s => s.trim()).join('-') : '-'}
-                                    </div>
-                                    <span class="inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded ${resultBadgeClass}">
-                                        ${res.result === '1' ? '1' : res.result === '2' ? '2' : res.result === 'X' ? 'X' : '?'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Away Team -->
-                            <div class="flex items-center flex-1 gap-3 justify-end">
-                                <div class="flex-1 min-w-0 text-right">
-                                    <p class="text-sm font-bold ${awayTeamClass} truncate">${res.awayTeam}</p>
-                                </div>
+                            <!-- Away Team (Right) -->
+                            <div class="flex flex-col items-center min-w-0 flex-1">
                                 ${awayLogo ? `
-                                    <img src="${awayLogo}" alt="${res.awayTeam}" class="w-10 h-10 object-contain ${awayTeamLogoOpacity}" onerror="this.style.display='none'">
+                                    <img src="${awayLogo}" alt="${res.awayTeam}" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-0.5 sm:mb-1 flex-shrink-0 ${awayTeamLogoOpacity}" onerror="this.style.display='none'">
                                 ` : ''}
-                            </div>
-                        </div>
-                        <!-- FantaBet Points Row -->
-                        <div class="mt-3 pt-3 border-t border-gray-700 flex items-center justify-between text-xs">
-                            <div class="text-center flex-1">
-                                <span class="text-gray-500">Punti</span>
-                                <p class="text-blue-300 font-bold text-sm">${res.homePoints || '-'}</p>
-                            </div>
-                            <div class="px-2 text-gray-500">vs</div>
-                            <div class="text-center flex-1">
-                                <span class="text-gray-500">Punti</span>
-                                <p class="text-blue-300 font-bold text-sm">${res.awayPoints || '-'}</p>
+                                <p class="text-xs font-bold ${awayTeamClass} truncate w-full text-center">${res.awayTeam}</p>
                             </div>
                         </div>
                     </div>
@@ -422,21 +407,22 @@ export const renderStandings = (sortColumn = null) => {
  */
 const generateFullStandingsHtml = (standings) => {
     let html = `
-        <table class="w-full text-left text-gray-300">
-            <thead class="bg-gray-700 text-gray-400 text-sm uppercase">
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+        <table class="w-full text-left text-gray-300 text-sm md:text-base">
+            <thead class="bg-gray-700 text-gray-400 text-xs md:text-sm uppercase sticky top-0">
                 <tr>
-                    <th class="px-3 py-3 text-center w-10">#</th>
-                    <th class="px-2 py-3 w-12"></th>
-                    <th class="px-3 py-3 text-left">Squadra</th>
-                    <th class="px-2 py-3 text-center w-12">Pt</th>
-                    <th class="px-2 py-3 text-center w-12">FPt</th>
-                    <th class="px-2 py-3 text-center w-10">G</th>
-                    <th class="px-2 py-3 text-center w-10">V</th>
-                    <th class="px-2 py-3 text-center w-10">P</th>
-                    <th class="px-2 py-3 text-center w-10">S</th>
-                    <th class="px-2 py-3 text-center w-10">GF</th>
-                    <th class="px-2 py-3 text-center w-10">GS</th>
-                    <th class="px-2 py-3 text-center w-12">DR</th>
+                    <th class="px-2 md:px-3 py-3 text-center min-w-[2rem]">#</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[2rem]">Logo</th>
+                    <th class="px-2 md:px-3 py-3 text-left min-w-[150px] md:min-w-[200px]">Squadra</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[3rem]">Pt</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[3rem]">FPt</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[2.5rem]">G</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[2.5rem]">V</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[2.5rem]">P</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[2.5rem]">S</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[2.5rem]">GF</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[2.5rem]">GS</th>
+                    <th class="px-1 md:px-2 py-3 text-center min-w-[3rem]">DR</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-700">
@@ -455,131 +441,33 @@ const generateFullStandingsHtml = (standings) => {
         
         html += `
             <tr class="hover:bg-gray-700/50 transition-colors">
-                <td class="px-3 py-3 text-center ${posClass}">${pos}</td>
-                <td class="px-2 py-3">
+                <td class="px-2 md:px-3 py-3 text-center ${posClass}">${pos}</td>
+                <td class="px-1 md:px-2 py-3 text-center">
                     <img src="${getTeamLogo(team.team)}" alt="${team.team}" 
-                         class="w-8 h-8 object-contain mx-auto" 
+                         class="w-6 h-6 md:w-8 md:h-8 object-contain mx-auto" 
                          onerror="this.style.display='none'">
                 </td>
-                <td class="px-3 py-3 font-semibold text-white">${team.team}</td>
-                <td class="px-2 py-3 text-center font-bold text-blue-400">${team.points}</td>
-                <td class="px-2 py-3 text-center text-green-400">${team.fantasyPoints.toFixed(1)}</td>
-                <td class="px-2 py-3 text-center">${team.played}</td>
-                <td class="px-2 py-3 text-center text-green-400">${team.wins}</td>
-                <td class="px-2 py-3 text-center text-yellow-400">${team.draws}</td>
-                <td class="px-2 py-3 text-center text-red-400">${team.losses}</td>
-                <td class="px-2 py-3 text-center">${team.goalsFor}</td>
-                <td class="px-2 py-3 text-center">${team.goalsAgainst}</td>
-                <td class="px-2 py-3 text-center ${goalDiffClass}">${goalDiffText}</td>
+                <td class="px-2 md:px-3 py-3 font-semibold text-white whitespace-normal">${team.team}</td>
+                <td class="px-1 md:px-2 py-3 text-center font-bold text-blue-400">${team.points}</td>
+                <td class="px-1 md:px-2 py-3 text-center text-green-400">${team.fantasyPoints.toFixed(1)}</td>
+                <td class="px-1 md:px-2 py-3 text-center">${team.played}</td>
+                <td class="px-1 md:px-2 py-3 text-center text-green-400">${team.wins}</td>
+                <td class="px-1 md:px-2 py-3 text-center text-yellow-400">${team.draws}</td>
+                <td class="px-1 md:px-2 py-3 text-center text-red-400">${team.losses}</td>
+                <td class="px-1 md:px-2 py-3 text-center">${team.goalsFor}</td>
+                <td class="px-1 md:px-2 py-3 text-center">${team.goalsAgainst}</td>
+                <td class="px-1 md:px-2 py-3 text-center ${goalDiffClass}">${goalDiffText}</td>
             </tr>
         `;
     });
     
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     return html;
 };
 
 // ===================================
 // RENDERING PARTITE APERTE
 // ===================================
-
-/**
- * Renderizza le partite aperte per scommesse
- * @param {Array} matches - Array delle partite
- * @param {number} giornata - Numero giornata
- */
-export const renderOpenMatches = (matches, giornata) => {
-    const container = document.getElementById('open-matches-container');
-    const noMatchesEl = document.getElementById('no-open-matches');
-    const giornataTitle = document.getElementById('betting-giornata-title');
-    
-    if (!container) return;
-    
-    // Aggiorna titolo giornata
-    if (giornataTitle) {
-        giornataTitle.textContent = `Giornata ${giornata}`;
-    }
-    
-    if (!matches || matches.length === 0) {
-        container.innerHTML = '';
-        if (noMatchesEl) noMatchesEl.classList.remove('hidden');
-        return;
-    }
-    
-    if (noMatchesEl) noMatchesEl.classList.add('hidden');
-    
-    let html = '';
-    
-    matches.forEach(match => {
-        const hasUserBet = match.userBet && match.userBet.stake > 0;
-        const userPrediction = match.userBet?.prediction || state.currentPredictions[match.id];
-        
-        // Genera opzioni scommessa
-        const options = ['1', 'X', '2'];
-        const optionLabels = { '1': '1', 'X': 'X', '2': '2' };
-        
-        let optionsHtml = options.map(opt => {
-            const odds = match.odds?.[opt] || '-';
-            const isSelected = userPrediction === opt;
-            const isSaved = hasUserBet && match.userBet.prediction === opt;
-            
-            let classes = 'bet-option rounded-lg text-center';
-            if (isSaved) {
-                classes += ' saved-bet';
-            } else if (isSelected) {
-                classes += ' local-selected';
-            }
-            
-            if (hasUserBet) {
-                classes += ' pointer-events-none opacity-50';
-            }
-            
-            return `
-                <div class="${classes}" 
-                     data-match-id="${match.id}" 
-                     data-prediction="${opt}"
-                     onclick="recordPrediction('${match.id}', '${opt}')">
-                    <div class="text-lg font-bold">${optionLabels[opt]}</div>
-                    <div class="text-sm text-blue-400">${odds}</div>
-                </div>
-            `;
-        }).join('');
-        
-        html += `
-            <div id="match-${match.id}" class="card mb-4">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center space-x-3 flex-1">
-                        <img src="${getTeamLogo(match.homeTeam)}" alt="${match.homeTeam}" 
-                             class="w-10 h-10 object-contain" onerror="this.style.display='none'">
-                        <span class="font-semibold text-white truncate">${match.homeTeam}</span>
-                    </div>
-                    <div class="text-gray-400 px-4">vs</div>
-                    <div class="flex items-center space-x-3 flex-1 justify-end">
-                        <span class="font-semibold text-white truncate">${match.awayTeam}</span>
-                        <img src="${getTeamLogo(match.awayTeam)}" alt="${match.awayTeam}" 
-                             class="w-10 h-10 object-contain" onerror="this.style.display='none'">
-                    </div>
-                </div>
-                
-                <div class="text-center text-sm text-gray-400 mb-3">
-                    ${formatDateItalian(match.date)}
-                </div>
-                
-                <div class="grid grid-cols-3 gap-3">
-                    ${optionsHtml}
-                </div>
-                
-                ${hasUserBet ? `
-                    <div class="mt-3 text-center text-sm text-green-400">
-                        ✓ Scommessa piazzata: ${match.userBet.prediction} @ ${match.userBet.odds}
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-};
 
 // ===================================
 // RENDERING SCOMMESSE PIAZZATE
@@ -1397,7 +1285,6 @@ export const filterHistoricResults = () => {
 
 window.renderStandings = renderStandings;
 window.renderHistoricResults = renderHistoricResults;
-window.renderOpenMatches = renderOpenMatches;
 window.renderPlacedBets = renderPlacedBets;
 window.renderStatistics = renderStatistics;
 window.showTeamStats = showTeamStats;

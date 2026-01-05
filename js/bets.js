@@ -674,8 +674,8 @@ const renderBetOption = (match, prediction, userBet, hasConfirmedBets) => {
         <div ${clickHandler}
              data-match-id="${match.id}" 
              data-prediction="${prediction}"
-             class="bet-option ${betClass} ${pointerEvents} ${opacity} p-3 text-center bg-gray-800 rounded-lg cursor-${hasConfirmedBets ? 'not-allowed' : 'pointer'}">
-            <p class="text-lg font-semibold">${prediction}</p>
+             class="bet-option ${betClass} ${pointerEvents} ${opacity} p-1 sm:p-3 text-center bg-gray-800 rounded-lg cursor-${hasConfirmedBets ? 'not-allowed' : 'pointer'} flex-1 flex flex-col justify-center">
+            <p class="text-sm sm:text-lg font-semibold">${prediction}</p>
             <p class="text-xs text-gray-400">Quota: ${match.odds[prediction]}</p>
         </div>
     `;
@@ -823,7 +823,12 @@ export const renderOpenMatches = (matches, nextGiornata) => {
     }
     
     const title = document.createElement('div');
-    title.innerHTML = `<h3 class="text-xl font-bold text-yellow-500 mb-4">Scommetti su: Giornata ${nextGiornata} (${filteredMatches.length} Partite)</h3>`;
+    const today = new Date().toISOString().split('T')[0];
+    title.className = 'flex items-center justify-between mb-6 pb-4 border-b border-gray-700';
+    title.innerHTML = `
+        <h3 class="text-xl sm:text-2xl font-bold text-yellow-400">Scommetti su: Giornata ${nextGiornata} (${filteredMatches.length} Partite)</h3>
+        <span class="text-sm text-gray-400">${today}</span>
+    `;
     frag.appendChild(title);
 
     filteredMatches.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -838,7 +843,7 @@ export const renderOpenMatches = (matches, nextGiornata) => {
 
         const matchCard = document.createElement('div');
         matchCard.id = `match-${match.id}`;
-        matchCard.className = 'card p-4 mb-4';
+        matchCard.className = 'card p-1.5 sm:p-4 mb-4';
 
         let stakeStatusText;
         if (userBet.stake > 0) {
@@ -854,39 +859,36 @@ export const renderOpenMatches = (matches, nextGiornata) => {
         }
 
         matchCard.innerHTML = `
-            <div class="mb-4">
-                <!-- Header con data -->
-                <div class="flex justify-end mb-3">
-                    <span class="text-xs sm:text-sm text-gray-400 bg-gray-700 px-3 py-1 rounded-full">${match.date}</span>
+            <div>
+                <!-- Status Scommessa -->
+                <p class="mb-4 text-sm text-gray-400">
+                    <span class="font-semibold">Scommessa:</span> ${stakeStatusText}
+                </p>
+                
+                <!-- Squadre in layout orizzontale -->
+                <div class="flex items-center justify-between gap-1 sm:gap-3 mb-4">
+                    <!-- Squadra Casa (Sinistra) -->
+                    <div class="flex flex-col items-center min-w-0 flex-1">
+                        <img src="${getTeamLogo(match.homeTeam)}" alt="${match.homeTeam}" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-0.5 sm:mb-1" onerror="this.style.display='none'">
+                        <span class="font-semibold text-white truncate text-xs sm:text-sm text-center">${match.homeTeam}</span>
+                    </div>
+                    
+                    <!-- VS (Centro) -->
+                    <div class="text-gray-400 px-1 sm:px-2 flex-shrink-0 text-xs sm:text-sm">vs</div>
+                    
+                    <!-- Squadra Trasferta (Destra) -->
+                    <div class="flex flex-col items-center min-w-0 flex-1">
+                        <img src="${getTeamLogo(match.awayTeam)}" alt="${match.awayTeam}" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-0.5 sm:mb-1" onerror="this.style.display='none'">
+                        <span class="font-semibold text-white truncate text-xs sm:text-sm text-center">${match.awayTeam}</span>
+                    </div>
                 </div>
                 
-                <!-- Squadre -->
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4 pb-4 border-b border-gray-700">
-                    <!-- Squadra Casa -->
-                    <div class="flex flex-col items-center text-center flex-1 w-full sm:w-auto">
-                        <img src="${getTeamLogo(match.homeTeam)}" alt="${match.homeTeam}" class="w-16 h-16 sm:w-12 sm:h-12 object-contain rounded mb-2" onerror="this.style.display='none'">
-                        <h3 class="text-lg sm:text-xl font-bold text-green-400 break-words">${match.homeTeam}</h3>
-                    </div>
-                    
-                    <!-- VS -->
-                    <div class="text-2xl sm:text-3xl font-bold text-gray-500 px-2">VS</div>
-                    
-                    <!-- Squadra Trasferta -->
-                    <div class="flex flex-col items-center text-center flex-1 w-full sm:w-auto">
-                        <img src="${getTeamLogo(match.awayTeam)}" alt="${match.awayTeam}" class="w-16 h-16 sm:w-12 sm:h-12 object-contain rounded mb-2" onerror="this.style.display='none'">
-                        <h3 class="text-lg sm:text-xl font-bold text-blue-400 break-words">${match.awayTeam}</h3>
-                    </div>
+                <!-- Opzioni Scommessa -->
+                <div class="flex flex-nowrap gap-0.5 sm:gap-3">
+                    ${renderBetOption(match, '1', userBet, hasConfirmedBets)}
+                    ${renderBetOption(match, 'X', userBet, hasConfirmedBets)}
+                    ${renderBetOption(match, '2', userBet, hasConfirmedBets)}
                 </div>
-            </div>
-            
-            <p class="mb-4 text-sm text-gray-400">
-                <span class="font-semibold text-gray-300">Scommessa:</span> ${stakeStatusText}
-            </p>
-            
-            <div class="grid grid-cols-3 gap-3">
-                ${renderBetOption(match, '1', userBet, hasConfirmedBets)}
-                ${renderBetOption(match, 'X', userBet, hasConfirmedBets)}
-                ${renderBetOption(match, '2', userBet, hasConfirmedBets)}
             </div>
         `;
         frag.appendChild(matchCard);
