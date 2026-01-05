@@ -231,6 +231,35 @@ const setupSectionHeaders = () => {
     });
 };
 
+/**
+ * Aggiorna il welcome personalizzato nella Home
+ * @param {Object} userProfile - Profilo utente con fantaSquad e displayName
+ */
+const updateHomeWelcome = (userProfile) => {
+    const teamLogoEl = document.getElementById('user-team-logo');
+    const teamNameEl = document.getElementById('user-team-name');
+    
+    if (!teamLogoEl || !teamNameEl) return;
+    
+    const squadName = userProfile?.fantaSquad || userProfile?.squadName;
+    const displayName = userProfile?.displayName || 'Utente';
+    
+    if (squadName) {
+        // Imposta logo della squadra
+        const logoUrl = getTeamLogo(squadName);
+        teamLogoEl.src = logoUrl;
+        teamLogoEl.alt = `Logo ${squadName}`;
+        
+        // Imposta nome squadra
+        teamNameEl.textContent = squadName;
+    } else {
+        // Nessuna squadra assegnata
+        teamLogoEl.src = 'https://raw.githubusercontent.com/savinopi/FantaBet2/main/assets/esempio%20stemma%20lega.png';
+        teamLogoEl.alt = 'Logo Lega';
+        teamNameEl.textContent = displayName;
+    }
+};
+
 const setupFirebase = async () => {
     if (firebaseInitialized) return;
     
@@ -365,8 +394,11 @@ const setupUserProfileListener = async (uid) => {
                 updateUserInfoDisplay();
                 checkAdminStatus();
                 
+                // Aggiorna welcome section nella Home
+                updateHomeWelcome(data);
+                
                 // Aggiorna elementi UI specifici
-                const squadName = data.squadName;
+                const squadName = data.fantaSquad || data.squadName;
                 if (squadName) {
                     const bonusSquadEl = document.getElementById('user-bonus-squad-name');
                     if (bonusSquadEl) bonusSquadEl.textContent = squadName;

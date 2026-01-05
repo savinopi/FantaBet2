@@ -261,35 +261,19 @@
                         <h1 class="text-2xl sm:text-3xl font-bold text-blue-400">Home</h1>
                     </div>
                     
-                    <!-- Logo e Titolo -->
-                    <div class="text-center mb-4 sm:mb-6">
-                        <div class="flex justify-center mb-3 sm:mb-4">
-                            <img src="https://raw.githubusercontent.com/savinopi/FantaBet2/main/assets/esempio%20stemma%20lega.png" alt="Logo Fantabet" class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain" onerror="this.style.display='none'">
+                    <!-- Benvenuto Utente con Logo Rosa -->
+                    <div id="user-welcome-section" class="flex items-center gap-4 mb-4 sm:mb-6 p-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/50">
+                        <div id="user-team-logo-container" class="flex-shrink-0">
+                            <img id="user-team-logo" src="" alt="Logo Rosa" class="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-lg" onerror="this.src='https://raw.githubusercontent.com/savinopi/FantaBet2/main/assets/esempio%20stemma%20lega.png'">
                         </div>
-                        <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-yellow-400">Benvenuto in FantaBet</h2>
-                        <p class="text-xs sm:text-sm text-gray-400 mt-1 sm:mt-2">Scegli una sezione per iniziare</p>
-                    </div>
-
-                    <!-- Grid Menu -->
-                    <div class="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 mb-4 sm:mb-6">
-                        <!-- I Miei Bonus -->
-                        <button id="user-bonus-button-home" onclick="setAppView('user_bonus')" class="hidden group relative bg-gradient-to-br from-slate-800/90 to-slate-900 hover:from-violet-900/40 hover:to-slate-900 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-xl hover:shadow-violet-500/20 transform hover:scale-[1.03] transition-all duration-300 flex flex-col items-center justify-center aspect-square border-2 border-slate-700/50 hover:border-violet-500/60 backdrop-blur-sm overflow-hidden">
-                            <svg class="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-2 sm:mb-3 text-violet-400 drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="relative text-white font-bold text-sm sm:text-base md:text-lg tracking-wide text-center leading-tight">I Miei<br class="sm:hidden">Bonus</span>
-                        </button>
-                        
-                        <!-- Sorteggio Coppa Italia (larga 2 colonne) -->
-                        <button onclick="setAppView('draw')" class="col-span-2 hidden md:flex group relative bg-gradient-to-br from-slate-800/90 to-slate-950 hover:from-amber-900/40 hover:to-slate-950 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-xl hover:shadow-amber-500/20 transform hover:scale-[1.03] transition-all duration-300 flex-col items-center justify-center min-h-[80px] sm:min-h-[100px] border-2 border-slate-700/50 hover:border-amber-500/60 backdrop-blur-sm overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-500/0 group-hover:from-amber-500/5 group-hover:to-amber-500/10 transition-all duration-300"></div>
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg/960px-Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg" alt="Coppa Italia" class="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-2 sm:mb-3 object-contain drop-shadow-lg">
-                            <span class="relative text-white font-bold text-sm sm:text-base md:text-lg tracking-wide">Sorteggio Coppa Italia</span>
-                        </button>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-400">Benvenuto,</p>
+                            <h2 id="user-team-name" class="text-lg sm:text-xl font-bold text-yellow-400">Caricamento...</h2>
+                        </div>
                     </div>
 
                     <!-- Classifica -->
-                    <div class="card p-4 sm:p-6">
+                    <div class="card p-4 sm:p-6 mb-4">
                         <div class="flex items-center justify-between mb-3 sm:mb-4">
                             <h3 class="text-xl sm:text-2xl font-bold text-yellow-500 flex items-center">
                                 <svg class="w-6 h-6 sm:w-8 sm:h-8 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -309,6 +293,31 @@
                             <p class="text-sm sm:text-base text-gray-500 text-center py-4 px-4">Carica i risultati per visualizzare la classifica</p>
                         </div>
                     </div>
+
+                    <!-- I Miei Bonus (rettangolare, larghezza piena) -->
+                    <button id="user-bonus-button-home" onclick="setAppView('user_bonus')" class="hidden w-full group relative bg-gradient-to-r from-violet-900/40 to-slate-900 hover:from-violet-800/50 hover:to-slate-800 rounded-xl p-4 shadow-xl hover:shadow-violet-500/20 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-between border-2 border-violet-500/30 hover:border-violet-500/60 backdrop-blur-sm overflow-hidden mb-4">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-violet-400 drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="text-white font-bold text-base sm:text-lg tracking-wide">I Miei Bonus</span>
+                        </div>
+                        <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                        
+                    <!-- Sorteggio Coppa Italia (solo desktop) -->
+                    <button onclick="setAppView('draw')" class="hidden md:flex w-full group relative bg-gradient-to-r from-amber-900/30 to-slate-900 hover:from-amber-800/40 hover:to-slate-800 rounded-xl p-4 shadow-xl hover:shadow-amber-500/20 transform hover:scale-[1.02] transition-all duration-300 items-center justify-between border-2 border-amber-500/30 hover:border-amber-500/60 backdrop-blur-sm overflow-hidden">
+                        <div class="flex items-center gap-3">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg/960px-Nuovo_logo_Coppa_Italia_Frecciarossa_%282024-2025%29.jpg" alt="Coppa Italia" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-lg">
+                            <span class="text-white font-bold text-base sm:text-lg tracking-wide">Sorteggio Coppa Italia</span>
+                        </div>
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+
                     </div> <!-- chiusura div interno home-container (riga 258) -->
                 </div>
 
