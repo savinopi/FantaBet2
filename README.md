@@ -1,8 +1,22 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.2**
+**Versione: 3.3**
 
-## 🆕 Changelog v3.2
+## 🆕 Changelog v3.3
+
+### Redesign Sezione Home
+- **Welcome personalizzato** con logo e nome della rosa dell'utente
+- **Layout ristrutturato**:
+  1. Benvenuto utente con logo squadra (da `fantaSquad` nel profilo)
+  2. Classifica (spostata subito dopo il welcome)
+  3. Pulsante "I Miei Bonus" - ora rettangolare e a larghezza piena
+  4. Sorteggio Coppa Italia (solo desktop)
+- **Rimosso** il generico "Benvenuto in FantaBet" con logo lega
+- **Nuova funzione** `updateHomeWelcome()` in app.js
+
+---
+
+## 📜 Changelog v3.2
 
 ### Ristrutturazione Sezione "Dati Lega"
 - **Nuova navigazione a sottosezioni** con header dinamico e freccia indietro
