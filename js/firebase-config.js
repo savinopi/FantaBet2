@@ -65,6 +65,8 @@ const getBonusCollectionRef = () => collection(db, 'fantabet_bonus');
 const getSquadsCollectionRef = () => collection(db, 'fantabet_squads');
 const getPlayersCollectionRef = () => collection(db, 'fantabet_players');
 const getPlayerStatsCollectionRef = () => collection(db, 'fantabet_player_stats');
+const getFormationsCollectionRef = () => collection(db, 'fantabet_formations');
+const getSquadBonusesCollectionRef = () => collection(db, 'fantabet_squad_bonuses');
 
 // ===================================
 // ESPORTAZIONI
@@ -113,5 +115,7 @@ export {
     getBonusCollectionRef,
     getSquadsCollectionRef,
     getPlayersCollectionRef,
-    getPlayerStatsCollectionRef
+    getPlayerStatsCollectionRef,
+    getFormationsCollectionRef,
+    getSquadBonusesCollectionRef
 };

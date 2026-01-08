@@ -14,13 +14,15 @@ import {
     getDoc,
     query,
     limit,
+    where,
     getResultsCollectionRef,
     getMatchesCollectionRef,
     getScheduleCollectionRef,
     getPlayersCollectionRef,
     getSquadsCollectionRef,
     getPlayerStatsCollectionRef,
-    getTeamsCollectionRef
+    getTeamsCollectionRef,
+    getFormationsCollectionRef
 } from './firebase-config.js';
 import { messageBox, showProgressBar, hideProgressBar, updateProgressBar, updateProgress } from './utils.js';
 import { getIsUserAdmin } from './auth.js';
@@ -745,6 +747,339 @@ const renderStatsSummary = (stats) => {
     container.innerHTML = html;
 };
 
+// ==================== FORMAZIONI GIORNATE ====================
+
+/**
+ * Apre il dialog per selezionare il file CSV delle formazioni
+ */
+export const triggerFormationsFileInput = () => {
+    document.getElementById('formations-csv-file-input').click();
+};
+
+/**
+ * Gestisce la selezione del file CSV delle formazioni
+ */
+export const handleFormationsFileSelect = () => {
+    const fileInput = document.getElementById('formations-csv-file-input');
+    const fileNameDisplay = document.getElementById('formations-file-name-display');
+    const uploadButton = document.getElementById('upload-formations-button');
+
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        fileNameDisplay.textContent = file.name;
+        uploadButton.disabled = false;
+        uploadButton.classList.remove('btn-secondary');
+        uploadButton.classList.add('btn-primary');
+    } else {
+        fileNameDisplay.textContent = 'Nessun file selezionato.';
+        uploadButton.disabled = true;
+        uploadButton.classList.add('btn-secondary');
+        uploadButton.classList.remove('btn-primary');
+    }
+};
+
+/**
+ * Conferma il caricamento delle formazioni
+ */
+export const confirmFormationsUpload = async () => {
+    const isUserAdmin = getIsUserAdmin();
+    if (!isUserAdmin) {
+        messageBox("Solo gli admin possono caricare le formazioni.");
+        return;
+    }
+
+    const fileInput = document.getElementById('formations-csv-file-input');
+    const file = fileInput?.files[0];
+
+    if (!file) {
+        messageBox("Seleziona un file prima di caricarlo.");
+        return;
+    }
+
+    if (confirm("Sei sicuro di voler caricare le formazioni? I dati esistenti per questa giornata verranno sovrascritti.")) {
+        processFormationsFile();
+    }
+};
+
+/**
+ * Processa il file CSV delle formazioni
+ */
+export const processFormationsFile = async () => {
+    const fileInput = document.getElementById('formations-csv-file-input');
+    const file = fileInput?.files[0];
+
+    if (!file) {
+        messageBox("Nessun file selezionato.");
+        return;
+    }
+
+    const uploadButton = document.getElementById('upload-formations-button');
+    uploadButton.disabled = true;
+    uploadButton.textContent = 'Caricamento...';
+
+    showProgressBar('Caricamento formazioni in corso...');
+
+    try {
+        const text = await file.text();
+        const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+
+        if (lines.length === 0) {
+            throw new Error('File CSV vuoto.');
+        }
+
+        updateProgress(10, 'Parsing CSV...');
+
+        // Parse CSV - Tracciato: giornata;match_id;squadra;avversario;lato;punteggio_match;formazione;sezione;ruolo;calciatore;voto_base;fantavoto;ha_giocato;fantavoto_in_verde;record_tipo;bonus_nome;bonus_valore
+        const formazioni = [];
+        const bonuses = []; // Per i bonus squadra (record_tipo === MODIFICATORE)
+        const giornateSet = new Set();
+        const squadreSet = new Set();
+        let processedLines = 0;
+
+        // Salta header
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (!line) continue;
+
+            const columns = line.split(';').map(col => col.trim().replace(/^["']|["']$/g, ''));
+
+            // Controllo colonne sufficienti
+            if (columns.length < 17) continue;
+
+            const giornata = parseInt(columns[0]) || 0;
+            const matchId = columns[1];
+            const squadra = columns[2];
+            const avversario = columns[3];
+            const lato = columns[4];
+            const punteggio = columns[5];
+            const formazione = columns[6];
+            const sezione = columns[7]; // TITOLARE o PANCHINA
+            const ruolo = columns[8];
+            const calciatore = columns[9];
+            const voto_base = parseFloat(columns[10]) || null;
+            const fantavoto = parseFloat(columns[11]) || null;
+            const ha_giocato = parseInt(columns[12]) || 0;
+            const fantavoto_in_verde = parseInt(columns[13]) || 0;
+            const record_tipo = columns[14];
+            const bonus_nome = columns[15];
+            const bonus_valore = parseFloat(columns[16]) || 0;
+
+            giornateSet.add(giornata);
+
+            // Se è una riga MODIFICATORE, salva il bonus
+            if (record_tipo === 'MODIFICATORE') {
+                // Valida che il bonus abbia almeno un nome e un valore valido
+                if (bonus_nome && bonus_valore > 0) {
+                    squadreSet.add(squadra);
+                    const bonus_data = {
+                        giornata,
+                        matchId,
+                        squadra,
+                        avversario,
+                        bonus: {
+                            nome: bonus_nome,
+                            valore: bonus_valore
+                        },
+                        timestamp: new Date().toISOString(),
+                        created_at: new Date()
+                    };
+                    bonuses.push(bonus_data);
+                }
+                processedLines++;
+                continue; // Salta al prossimo record
+            }
+
+            // Se è un GIOCATORE, valida i dati
+            if (!calciatore) continue;
+
+            squadreSet.add(squadra);
+
+            const formazione_data = {
+                giornata,
+                matchId,
+                squadra,
+                avversario,
+                lato,
+                punteggio,
+                formazione,
+                sezione, // TITOLARE/PANCHINA
+                ruolo,
+                calciatore,
+                voto_base,
+                fantavoto,
+                ha_giocato: ha_giocato === 1,
+                fantavoto_in_verde,
+                record_tipo,
+                // Metadati
+                timestamp: new Date().toISOString(),
+                created_at: new Date()
+            };
+
+            formazioni.push(formazione_data);
+            processedLines++;
+
+            if (processedLines % 50 === 0) {
+                const progress = Math.min(70, 10 + (processedLines / lines.length) * 60);
+                updateProgress(progress, `Processate ${processedLines} righe...`);
+            }
+        }
+
+        if (formazioni.length === 0) {
+            throw new Error('Nessun dato valido trovato nel CSV.');
+        }
+
+        console.log(`Formazioni parsate: ${formazioni.length} record`, {
+            giornate: Array.from(giornateSet).length,
+            squadre: Array.from(squadreSet).length
+        });
+
+        updateProgress(75, 'Salvataggio dati in Firestore...');
+
+        // Salva i dati in Firestore
+        const formationsCollection = getFormationsCollectionRef();
+
+        // Per ogni giornata, cancella i dati precedenti e carica i nuovi
+        for (const giornata of giornateSet) {
+            // Carica documenti esistenti per questa giornata
+            const q = query(formationsCollection, where('giornata', '==', giornata));
+            const snapshot = await getDocs(q);
+
+            // Cancella documenti precedenti
+            const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(deletePromises);
+        }
+
+        // Salva nuovi documenti
+        let savedCount = 0;
+        for (const formazione of formazioni) {
+            await addDoc(formationsCollection, formazione);
+            savedCount++;
+
+            if (savedCount % 50 === 0) {
+                const progress = 75 + (savedCount / formazioni.length) * 15;
+                updateProgress(progress, `Salvati ${savedCount}/${formazioni.length} record...`);
+            }
+        }
+
+        // Salva i bonus
+        if (bonuses.length > 0) {
+            const { collection } = await import('./firebase-config.js');
+            const db = (await import('./firebase-config.js')).db;
+            const bonusesCollection = collection(db, 'fantabet_squad_bonuses');
+            
+            // Cancella bonus precedenti per questa giornata
+            for (const giornata of giornateSet) {
+                const q = query(bonusesCollection, where('giornata', '==', giornata));
+                const snapshot = await getDocs(q);
+                const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deletePromises);
+            }
+
+            // Salva nuovi bonus
+            for (const bonus of bonuses) {
+                await addDoc(bonusesCollection, bonus);
+            }
+            
+            console.log(`Bonus salvati: ${bonuses.length}`);
+        }
+
+        updateProgress(100, 'Completato!');
+
+        // Mostra riepilogo
+        renderFormationsData(formazioni, giornateSet, squadreSet);
+
+        hideProgressBar();
+        messageBox(`Formazioni caricate con successo!\n\nGiornate: ${giornateSet.size}\nSquadre: ${squadreSet.size}\nRecord totali: ${formazioni.length}\nBonus: ${bonuses.length}`);
+
+        // Reset UI
+        uploadButton.disabled = false;
+        uploadButton.textContent = 'Carica Formazioni';
+        fileInput.value = '';
+        document.getElementById('formations-file-name-display').textContent = 'Nessun file selezionato.';
+        uploadButton.classList.add('btn-secondary');
+        uploadButton.classList.remove('btn-primary');
+
+    } catch (error) {
+        console.error('Errore durante il processamento formazioni:', error);
+        hideProgressBar();
+        messageBox("Errore durante il caricamento: " + error.message);
+        uploadButton.disabled = false;
+        uploadButton.textContent = 'Carica Formazioni';
+    }
+};
+
+/**
+ * Renderizza il riepilogo delle formazioni caricate
+ */
+const renderFormationsData = (formazioni, giornateSet, squadreSet) => {
+    const container = document.getElementById('formations-data-container');
+    if (!container) return;
+
+    // Raggruppa per giornata e squadra
+    const datiGiornate = new Map();
+    formazioni.forEach(f => {
+        if (!datiGiornate.has(f.giornata)) {
+            datiGiornate.set(f.giornata, new Map());
+        }
+        if (!datiGiornate.get(f.giornata).has(f.squadra)) {
+            datiGiornate.get(f.giornata).set(f.squadra, {
+                titolari: [],
+                panchina: [],
+                bonus: []
+            });
+        }
+        const squadraData = datiGiornate.get(f.giornata).get(f.squadra);
+        
+        if (f.sezione === 'TITOLARE') {
+            squadraData.titolari.push(f);
+        } else if (f.sezione === 'PANCHINA') {
+            squadraData.panchina.push(f);
+        }
+        
+        if (f.bonus && f.bonus.nome) {
+            squadraData.bonus.push(f.bonus);
+        }
+    });
+
+    let html = '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
+
+    // Mostra per giornata
+    const sortedGiornate = Array.from(datiGiornate.keys()).sort((a, b) => a - b);
+    
+    for (const giornata of sortedGiornate) {
+        const squadreData = datiGiornate.get(giornata);
+        let titolariTotali = 0;
+        let pancinaTotali = 0;
+        let bonusTotali = 0;
+
+        squadreData.forEach(data => {
+            titolariTotali += data.titolari.length;
+            pancinaTotali += data.panchina.length;
+            bonusTotali += data.bonus.length;
+        });
+
+        html += `
+            <div class="bg-gray-800 border border-orange-700/50 rounded-lg p-4">
+                <h5 class="text-lg font-bold text-orange-400 mb-3">Giornata ${giornata}</h5>
+                <div class="text-sm text-gray-300 space-y-2">
+                    <p>Squadre: <span class="font-bold">${squadreData.size}</span></p>
+                    <p>Titolari: <span class="font-bold text-green-400">${titolariTotali}</span></p>
+                    <p>Panchina: <span class="font-bold text-yellow-400">${pancinaTotali}</span></p>
+                    <p>Bonus applicati: <span class="font-bold text-blue-400">${bonusTotali}</span></p>
+                </div>
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+};
+
+/**
+ * Riferimento alla collection Firestore per le formazioni
+ */
+// Nota: getFormationsCollectionRef è già importato da firebase-config.js
+
 // Esporta variabili di stato per accesso esterno
 export const getLocalCsvContent = () => localCsvContent;
 export const setLocalCsvContent = (content) => { localCsvContent = content; };
@@ -759,6 +1094,10 @@ window.triggerSquadsFileInput = triggerSquadsFileInput;
 window.handleSquadsFileSelect = handleSquadsFileSelect;
 window.confirmSquadsUpload = confirmSquadsUpload;
 window.processSquadsFile = processSquadsFile;
+window.triggerFormationsFileInput = triggerFormationsFileInput;
+window.handleFormationsFileSelect = handleFormationsFileSelect;
+window.confirmFormationsUpload = confirmFormationsUpload;
+window.processFormationsFile = processFormationsFile;
 window.triggerStatsFileInput = triggerStatsFileInput;
 window.handleStatsFileSelect = handleStatsFileSelect;
 window.confirmStatsUpload = confirmStatsUpload;

@@ -6,6 +6,7 @@
 
 import { getTeamLogo } from './config.js';
 import * as state from './state.js';
+import { showMatchDetails } from './match-details.js';
 import { 
     getDocs, 
     getPlayersCollectionRef, 
@@ -176,7 +177,14 @@ export const renderHistoricResults = (results) => {
                 }
 
                 html += `
-                    <div class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-3 sm:p-4 mb-3 hover:bg-gray-750 transition-colors cursor-pointer">
+                    <div class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-3 sm:p-4 mb-3 hover:bg-gray-750 transition-colors cursor-pointer" onclick="showMatchDetails(${JSON.stringify({
+                        giornata: res.giornata,
+                        homeTeam: res.homeTeam,
+                        awayTeam: res.awayTeam,
+                        score: res.score,
+                        homePoints: res.homePoints,
+                        awayPoints: res.awayPoints
+                    }).replace(/"/g, '&quot;')})">
                         <!-- Flex Layout (Horizontal) -->
                         <div class="flex items-center justify-between gap-1 sm:gap-3">
                             <!-- Home Team (Left) -->

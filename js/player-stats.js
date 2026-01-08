@@ -14,7 +14,7 @@ import {
 import { messageBox, showProgressBar, hideProgressBar, updateProgressBar, updateProgress } from './utils.js';
 import { getTeamLogo } from './config.js';
 import { getIsUserAdmin } from './auth.js';
-import { getAllResults } from './state.js';
+import { getAllResults, getPlayerStatsData, setPlayerStatsData } from './state.js';
 import { renderStandingsTrend } from './rendering.js';
 
 // Cache per le immagini dei giocatori
@@ -592,17 +592,23 @@ export const loadSquadsData = async () => {
         const playersCollection = getPlayersCollectionRef();
         const statsCollection = getPlayerStatsCollectionRef();
         
-        // Carica le statistiche per ottenere gli IDs
+        // Carica le statistiche per ottenere gli IDs e tutti i dati
         const statsSnapshot = await getDocs(statsCollection);
         const playerIdMap = new Map(); // Nome normalizzato -> playerId
+        const allStats = []; // Array con tutte le statistiche
         
         statsSnapshot.forEach(doc => {
             const stat = doc.data();
+            allStats.push(stat);
             const normalizedName = (stat.playerName || '').trim().toLowerCase();
             playerIdMap.set(normalizedName, stat.playerId);
         });
         
+        // Salva le statistiche nello stato globale per renderSquadsView
+        setPlayerStatsData(allStats);
+        
         console.log(`[Rose] IDs caricati dalle statistiche: ${playerIdMap.size} giocatori`);
+        console.log(`[Rose] Statistiche salvate nello stato globale: ${allStats.length} giocatori`);
         
         // Carica i giocatori dalle Rose
         const snapshot = await getDocs(playersCollection);
@@ -675,6 +681,23 @@ const renderSquadsView = (squadsMap) => {
         console.log('[DEBUG renderSquadsView] Primo giocatore della prima squadra:', firstPlayers[0]);
     }
     
+    // Importa le statistiche globali
+    let allPlayerStats = getPlayerStatsData() || [];
+    console.log('[DEBUG renderSquadsView] Statistiche recuperate dallo stato globale:', allPlayerStats.length);
+    
+    // Crea una map nome -> statistiche per lookup veloce
+    const statsMap = new Map();
+    for (const stat of allPlayerStats) {
+        const normalizedName = (stat.playerName || '').trim().toLowerCase();
+        statsMap.set(normalizedName, stat);
+    }
+    
+    console.log('[DEBUG renderSquadsView] Statistiche caricate in map:', statsMap.size);
+    if (statsMap.size > 0) {
+        const firstStat = statsMap.values().next().value;
+        console.log('[DEBUG renderSquadsView] Prima statistica:', firstStat);
+    }
+    
     let html = '';
     
     // Ordina le squadre alfabeticamente
@@ -741,6 +764,19 @@ const renderSquadsView = (squadsMap) => {
         const totalCost = players.reduce((sum, p) => sum + p.cost, 0);
         const squadLogoUrl = getTeamLogo(squadName);
         
+        // Calcola la media di FantaMedia per la squadra
+        let totalFantaMedia = 0;
+        let countFantaMedia = 0;
+        players.forEach(player => {
+            const normalizedName = (player.playerName || '').trim().toLowerCase();
+            const stat = statsMap.get(normalizedName);
+            if (stat && stat.fm) {
+                totalFantaMedia += stat.fm;
+                countFantaMedia++;
+            }
+        });
+        const avgFantaMedia = countFantaMedia > 0 ? (totalFantaMedia / countFantaMedia).toFixed(2) : '-';
+        
         // Header della squadra
         html += `
             <div class="bg-gray-900 border-2 border-purple-600 rounded-xl overflow-hidden shadow-2xl">
@@ -750,7 +786,7 @@ const renderSquadsView = (squadsMap) => {
                         <img src="${squadLogoUrl}" alt="${squadName}" class="w-14 h-14 object-contain rounded-lg bg-white/5 p-1 border border-purple-500" onerror="this.style.display='none'">
                         <div class="flex-1">
                             <h3 class="text-2xl font-bold text-white tracking-wide">${squadName}</h3>
-                            <div class="flex gap-3 mt-2 text-sm">
+                            <div class="flex gap-3 mt-2 text-sm flex-wrap">
                                 <div class="bg-purple-700/50 px-3 py-1 rounded-full border border-purple-500">
                                     <span class="text-gray-300">👥</span>
                                     <span class="text-white font-bold ml-1">${players.length}</span>
@@ -758,6 +794,10 @@ const renderSquadsView = (squadsMap) => {
                                 <div class="bg-yellow-700/50 px-3 py-1 rounded-full border border-yellow-500">
                                     <span class="text-gray-300">💰</span>
                                     <span class="text-yellow-300 font-bold ml-1">${totalCost}</span>
+                                </div>
+                                <div class="bg-blue-700/50 px-3 py-1 rounded-full border border-blue-500">
+                                    <span class="text-gray-300">📊</span>
+                                    <span class="text-blue-300 font-bold ml-1">FM Avg: ${avgFantaMedia}</span>
                                 </div>
                             </div>
                         </div>
@@ -813,23 +853,34 @@ const renderSquadsView = (squadsMap) => {
                 const borderColor = roleBorderColors[role];
                 const initialsColor = getInitialsBgColor(role);
                 
+                // Recupera le statistiche del giocatore
+                const normalizedName = (player.playerName || '').trim().toLowerCase();
+                const playerStat = statsMap.get(normalizedName);
+                
+                const media = playerStat && playerStat.mv !== undefined ? playerStat.mv.toFixed(2) : '-';
+                const fantaMedia = playerStat && playerStat.fm !== undefined ? playerStat.fm.toFixed(1) : '-';
+                const fantaMediaNum = playerStat && playerStat.fm !== undefined ? parseFloat(playerStat.fm) : null;
+                
+                // Determina il colore per FantaMedia
+                let fmColor = 'text-gray-400';
+                if (fantaMediaNum !== null) {
+                    if (fantaMediaNum > 6) fmColor = 'text-blue-400';
+                    else if (fantaMediaNum < 6) fmColor = 'text-red-400';
+                    else fmColor = 'text-white';
+                }
+                
                 // Costruisci URL immagine se esiste l'ID
-                const playerImageUrl = player.playerId 
-                    ? `https://content.fantacalcio.it/web/campioncini/20/card/${player.playerId}.png?v=466`
-                    : null;
+                const playerImageUrl = null; // Rimosso caricamento immagini per performance
                 
                 html += `
                     <div class="group relative bg-gray-800 border-2 ${borderColor} rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105">
-                        <!-- Immagine giocatore o placeholder -->
+                        <!-- Placeholder con iniziali (rimosso caricamento immagini) -->
                         <div class="relative h-40 bg-gradient-to-b ${bgGradient} flex items-center justify-center overflow-hidden">
-                            ${playerImageUrl 
-                                ? `<img src="${playerImageUrl}" alt="${player.playerName}" class="w-full h-full object-cover" onerror="this.style.display='none'">` 
-                                : `<div class="w-full h-full flex flex-col items-center justify-center">
-                                    <div class="w-16 h-16 rounded-full ${initialsColor} flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-                                        ${initials}
-                                    </div>
-                                   </div>`
-                            }
+                            <div class="w-full h-full flex flex-col items-center justify-center">
+                                <div class="w-16 h-16 rounded-full ${initialsColor} flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                                    ${initials}
+                                </div>
+                               </div>
                             <div class="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity bg-black"></div>
                         </div>
                         
@@ -848,9 +899,19 @@ const renderSquadsView = (squadsMap) => {
                             <p class="text-xs text-gray-400 mb-2 line-clamp-1">
                                 ${player.serieATeam}
                             </p>
-                            <div class="flex justify-between items-center pt-2 border-t border-gray-700">
-                                <span class="text-xs text-gray-500">Costo</span>
-                                <span class="text-sm font-bold text-yellow-300">${player.cost}</span>
+                            <div class="space-y-2 pt-2 border-t border-gray-700">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-gray-500">Costo</span>
+                                    <span class="font-bold text-yellow-300">${player.cost}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-gray-500">Media</span>
+                                    <span class="font-bold text-green-400">${media}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-gray-500">FM</span>
+                                    <span class="font-bold ${fmColor}">${fantaMedia}</span>
+                                </div>
                             </div>
                         </div>
                     </div>

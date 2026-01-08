@@ -273,6 +273,25 @@
                         </div>
                     </div>
 
+                    <!-- Barra Progressione Giornate -->
+                    <div class="card p-4 sm:p-6 mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 id="giornata-title" class="text-lg sm:text-xl font-bold text-blue-400 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                                </svg>
+                                Progressione
+                            </h3>
+                        </div>
+                        
+                        <!-- Barra progressiva orizzontale -->
+                        <div class="w-full bg-gray-800 rounded-full h-4 sm:h-5 overflow-hidden">
+                            <div id="giornate-grid" class="flex h-full gap-px">
+                                <!-- Popolato dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Classifica -->
                     <div class="card p-4 sm:p-6 mb-4">
                         <div class="flex items-center justify-between mb-3 sm:mb-4">
@@ -568,6 +587,40 @@
                                 </div>
                             </div>
                             
+                            <!-- Sezione Caricamento Formazioni Giornate -->
+                            <div class="border-t border-gray-700 pt-6 mt-6">
+                                <h4 class="text-lg font-semibold mb-4 text-orange-400">Caricamento Formazioni Giornate</h4>
+                                <div class="flex flex-wrap items-center gap-4 mb-4">
+                                    <label for="formations-csv-file-input" class="sr-only">Seleziona file CSV Formazioni</label>
+                                    <input type="file" id="formations-csv-file-input" class="hidden" onchange="handleFormationsFileSelect()" accept=".csv" aria-label="Seleziona file CSV Formazioni">
+                                    <button onclick="triggerFormationsFileInput()" class="btn-primary">Seleziona File Formazioni (.csv)</button>
+                                    <button id="upload-formations-button" onclick="confirmFormationsUpload()" class="btn-secondary" disabled>Carica Formazioni</button>
+                                    <span id="formations-file-name-display" class="text-gray-400" aria-live="polite">Nessun file selezionato.</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-2">
+                                    Il file CSV deve avere il delimitatore ';' con tracciato: giornata;match_id;squadra;avversario;lato;punteggio_match;formazione;sezione;ruolo;calciatore;voto_base;fantavoto;ha_giocato;fantavoto_in_verde;record_tipo;bonus_nome;bonus_valore
+                                </p>
+                                <p class="text-xs text-gray-400 mb-4">
+                                    <strong>Colonne importanti:</strong> sezione=TITOLARE/PANCHINA, bonus_nome=Modificatore fairplay/Modificatore difesa, bonus_valore=valore numerico
+                                </p>
+                                <!-- Progress Bar Formazioni -->
+                                <div id="formations-progress" class="mb-4 hidden">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span id="formations-progress-status" class="text-sm text-gray-300">Inizializzazione...</span>
+                                        <span id="formations-progress-percentage" class="text-sm font-bold text-orange-400">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                                        <div id="formations-progress-bar-fill" class="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div id="formations-summary-container" class="mb-4">
+                                    <!-- Riepilogo formazioni caricate -->
+                                </div>
+                                <div id="formations-data-container" class="overflow-x-auto">
+                                    <p class="text-gray-500 text-sm">Nessuna formazione caricata.</p>
+                                </div>
+                            </div>
+
                             <!-- Sezione Caricamento Statistiche Calciatori -->
                             <div class="border-t border-gray-700 pt-6 mt-6">
                                 <h4 class="text-lg font-semibold mb-4 text-blue-400">Caricamento Statistiche Calciatori</h4>
@@ -2881,7 +2934,7 @@
     <!-- Footer versione -->
     <footer class="bg-gray-900 border-t border-gray-800 py-4 mt-8">
         <div class="text-center text-gray-500 text-sm">
-            <p>FantaBet v3.7</p>
+            <p>FantaBet v3.8</p>
             <p class="text-xs text-gray-600" id="update-timestamp"></p>
         </div>
     </footer>
