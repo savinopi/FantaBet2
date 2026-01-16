@@ -1373,6 +1373,33 @@ document.addEventListener('click', (event) => {
 });
 
 // ===================================
+// RENDI GLOBALI LE VARIABILI AUTH
+// ===================================
+
+// Esponi userId e isUserAdmin come proprietà globali accessibili da script inline
+Object.defineProperty(window, 'userId', {
+    get: () => {
+        const { getUserId } = window._authGetters || {};
+        return getUserId ? getUserId() : null;
+    },
+    configurable: true
+});
+
+Object.defineProperty(window, 'isUserAdmin', {
+    get: () => {
+        const { getIsUserAdmin } = window._authGetters || {};
+        return getIsUserAdmin ? getIsUserAdmin() : false;
+    },
+    configurable: true
+});
+
+// Store i getter per accesso dalla proprietà window
+window._authGetters = {
+    getUserId: () => userId,
+    getIsUserAdmin: () => isUserAdmin
+};
+
+// ===================================
 // INIZIALIZZAZIONE (Export per HTML)
 // ===================================
 
@@ -1382,6 +1409,9 @@ document.addEventListener('click', (event) => {
  */
 export const initializeApp = async () => {
     console.log('FANTABet - Inizializzazione...');
+    
+    // Esponi Firebase Firestore a livello globale per script inline
+    window.db = db;
     
     // Setup dipendenze per admin.js (le funzioni sono definite in questo modulo)
     setAdminDependencies({
