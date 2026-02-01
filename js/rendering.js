@@ -8,7 +8,9 @@ import { getTeamLogo } from './config.js';
 import * as state from './state.js';
 import { showMatchDetails } from './match-details.js';
 import { 
-    getDocs, 
+    getDocs,
+    collection,
+    getFirestore,
     getPlayersCollectionRef, 
     getPlayerStatsCollectionRef 
 } from './firebase-config.js';
@@ -1420,11 +1422,14 @@ export const filterHistoricResults = () => {
 
 export async function renderTeamOfTheSeason() {
     try {
+        console.log('🏆 Inizio caricamento Team of the Season...');
         const db = getFirestore();
         
         // Carica giocatori e loro statistiche
         const playersSnapshot = await getDocs(collection(db, 'players'));
         const statsSnapshot = await getDocs(collection(db, 'player_stats'));
+        
+        console.log(`📊 Giocatori trovati: ${playersSnapshot.docs.length}, Statistiche: ${statsSnapshot.docs.length}`);
         
         // Crea map per statistiche
         const statsMap = new Map();
@@ -1455,6 +1460,8 @@ export async function renderTeamOfTheSeason() {
             .filter(p => p.team && p.team !== 'Svincolato' && p.team !== 'No Team') // Solo giocatori in squadra
             .filter(p => p.mv > 0); // Solo con media voto
         
+        console.log(`👥 Giocatori in squadra con media voto: ${allPlayersWithStats.length}`);
+        
         // Raggruppa per ruolo e ordina
         const roleGroups = {
             'P': [],
@@ -1469,6 +1476,8 @@ export async function renderTeamOfTheSeason() {
             }
         });
         
+        console.log(`📋 Raggruppamento per ruolo: P=${roleGroups['P'].length}, D=${roleGroups['D'].length}, C=${roleGroups['C'].length}, A=${roleGroups['A'].length}`);
+        
         // Ordina ogni ruolo per media voto descrescente e prendi i migliori
         const formation = {
             'P': roleGroups['P'].sort((a, b) => b.mv - a.mv).slice(0, 1),
@@ -1477,11 +1486,15 @@ export async function renderTeamOfTheSeason() {
             'A': roleGroups['A'].sort((a, b) => b.mv - a.mv).slice(0, 3)
         };
         
+        console.log('⚽ Formazione selezionata:', formation);
+        
         // Renderizza il campo
         renderTeamOfSeasonField(formation);
+        console.log('✅ Team of the Season renderizzato con successo');
         
     } catch (error) {
-        console.error('Errore caricamento Team of the Season:', error);
+        console.error('❌ Errore caricamento Team of the Season:', error);
+        alert('Errore nel caricamento del Team of the Season. Controlla la console.');
     }
 }
 
