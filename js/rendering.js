@@ -9,8 +9,6 @@ import * as state from './state.js';
 import { showMatchDetails } from './match-details.js';
 import { 
     getDocs,
-    collection,
-    getFirestore,
     getPlayersCollectionRef, 
     getPlayerStatsCollectionRef 
 } from './firebase-config.js';
@@ -1423,11 +1421,13 @@ export const filterHistoricResults = () => {
 export async function renderTeamOfTheSeason() {
     try {
         console.log('🏆 Inizio caricamento Team of the Season...');
-        const db = getFirestore();
         
-        // Carica giocatori e loro statistiche
-        const playersSnapshot = await getDocs(collection(db, 'players'));
-        const statsSnapshot = await getDocs(collection(db, 'player_stats'));
+        // Carica giocatori e loro statistiche usando i reference helper
+        const playersRef = getPlayersCollectionRef();
+        const statsRef = getPlayerStatsCollectionRef();
+        
+        const playersSnapshot = await getDocs(playersRef);
+        const statsSnapshot = await getDocs(statsRef);
         
         console.log(`📊 Giocatori trovati: ${playersSnapshot.docs.length}, Statistiche: ${statsSnapshot.docs.length}`);
         
