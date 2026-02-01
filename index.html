@@ -1138,29 +1138,29 @@
 
                             <!-- Campo Tattico 1-4-3-3 -->
                             <div class="flex justify-center mb-8">
-                                <div class="relative w-full max-w-2xl rounded-lg overflow-hidden border-4 border-white shadow-lg" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #2d5a3d 0%, #1d7a3d 50%, #0d5a2d 100%);">
-                                    <!-- Background campo calcio SVG -->
-                                    <div class="absolute inset-0 opacity-30" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1920 1080%22%3E%3Crect fill=%22%23ffffff%22 width=%221920%22 height=%221080%22/%3E%3Cline x1=%22960%22 y1=%220%22 x2=%22960%22 y2=%221080%22 stroke=%22%23ffffff%22 stroke-width=%2230%22/%3E%3Ccircle cx=%22960%22 cy=%22540%22 r=%22150%22 fill=%22none%22 stroke=%22%23ffffff%22 stroke-width=%2230%22/%3E%3Crect x=%22100%22 y=%22300%22 width=%22400%22 height=%22480%22 fill=%22none%22 stroke=%22%23ffffff%22 stroke-width=%2230%22/%3E%3Crect x=%221420%22 y=%22300%22 width=%22400%22 height=%22480%22 fill=%22none%22 stroke=%22%23ffffff%22 stroke-width=%2230%22/%3E%3Ccircle cx=%22300%22 cy=%22540%22 r=%2280%22 fill=%22none%22 stroke=%22%23ffffff%22 stroke-width=%2230%22/%3E%3Ccircle cx=%221620%22 cy=%22540%22 r=%2280%22 fill=%22none%22 stroke=%22%23ffffff%22 stroke-width=%2230%22/%3E%3C/svg%3E'); background-size: cover; background-position: center; pointer-events: none;"></div>
+                                <div class="relative w-full max-w-4xl rounded-lg overflow-visible border-4 border-white shadow-lg" style="background-image: url('assets/football-field.png'); background-size: cover; background-position: center; padding: 2rem; min-height: 500px;">
+                                    <!-- Overlay scuro per migliore visibilità -->
+                                    <div class="absolute inset-0 opacity-10 pointer-events-none rounded-lg" style="background-color: #000;"></div>
                                     
-                                    <div class="relative z-10 w-full h-full flex flex-col justify-between p-6">
+                                    <div class="relative z-20 w-full flex flex-col justify-between h-full gap-2 sm:gap-3 md:gap-4" style="min-height: 400px;">
                                         <!-- Portieri (1) -->
-                                        <div class="flex justify-center mb-2">
-                                            <div id="team-season-goalkeeper" class="flex gap-4"></div>
+                                        <div class="flex justify-center pointer-events-auto">
+                                            <div id="team-season-goalkeeper" class="flex gap-2 sm:gap-3 md:gap-4 flex-nowrap justify-center w-full pointer-events-auto"></div>
                                         </div>
 
-                                        <!-- Difensori (4) -->
-                                        <div class="flex justify-center gap-3 mb-2">
-                                            <div id="team-season-defenders" class="flex gap-3 w-full justify-between"></div>
+                                        <!-- Difensori (4) - Una riga sola -->
+                                        <div class="flex justify-center pointer-events-auto">
+                                            <div id="team-season-defenders" class="flex gap-1.5 sm:gap-2 md:gap-3 flex-nowrap justify-center w-full pointer-events-auto px-2 sm:px-4 md:px-6" style="overflow-x: auto;"></div>
                                         </div>
 
-                                        <!-- Centrocampisti (3) -->
-                                        <div class="flex justify-center gap-4 mb-2">
-                                            <div id="team-season-midfielders" class="flex gap-4 w-full justify-between"></div>
+                                        <!-- Centrocampisti (3) - Una riga sola -->
+                                        <div class="flex justify-center pointer-events-auto">
+                                            <div id="team-season-midfielders" class="flex gap-2 sm:gap-3 md:gap-4 flex-nowrap justify-center w-full pointer-events-auto px-3 sm:px-6 md:px-8" style="overflow-x: auto;"></div>
                                         </div>
 
-                                        <!-- Attaccanti (3) -->
-                                        <div class="flex justify-center gap-4">
-                                            <div id="team-season-forwards" class="flex gap-4 w-full justify-between"></div>
+                                        <!-- Attaccanti (3) - Una riga sola -->
+                                        <div class="flex justify-center pointer-events-auto">
+                                            <div id="team-season-forwards" class="flex gap-2 sm:gap-3 md:gap-4 flex-nowrap justify-center w-full pointer-events-auto px-3 sm:px-6 md:px-8" style="overflow-x: auto;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1168,7 +1168,7 @@
 
                             <!-- Legenda statistica -->
                             <div class="bg-gray-700/50 rounded-lg p-4 text-center text-sm text-gray-300">
-                                <p>Formazione 4-3-3 basata sulla media voto più alta tra i giocatori in squadra</p>
+                                <p>Formazione 4-3-3 basata sulla fantamedia più alta tra i giocatori in squadra</p>
                             </div>
                         </div>
                     </div>
@@ -1976,7 +1976,7 @@
                     if (window.renderHistoricResults && window.getAllResults) {
                         const results = window.getAllResults();
                         if (results && results.length > 0) {
-                            window.renderHistoricResults(results);
+                            window.renderHistoricResults(results, window.giornateData || {});
                         }
                     }
                     break;
@@ -2021,7 +2021,7 @@
          */
         function goBackToLeagueMenu() {
             // Nascondi tutte le sottosezioni
-            const subSections = ['league-sub-results', 'league-sub-squads', 'league-sub-players', 'league-sub-stats', 'league-sub-standings'];
+            const subSections = ['league-sub-results', 'league-sub-squads', 'league-sub-players', 'league-sub-stats', 'league-sub-standings', 'league-sub-team-of-season'];
             subSections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -3284,7 +3284,7 @@
     <!-- Footer versione -->
     <footer class="bg-gray-900 border-t border-gray-800 py-4 mt-8">
         <div class="text-center text-gray-500 text-sm">
-            <p>FantaBet v3.9</p>
+            <p>FantaBet v3.10</p>
             <p class="text-xs text-gray-600" id="update-timestamp"></p>
         </div>
     </footer>

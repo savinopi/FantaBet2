@@ -2,6 +2,28 @@
 
 Tutti i cambiamenti notevoli di questo progetto saranno documentati in questo file.
 
+## [3.10] - 2026-02-01
+
+### Aggiunte
+- **Team of the Season Feature**: Visualizzazione della formazione ideale (1-4-3-3) con i migliori giocatori della stagione
+  - Selezione giocatori basata su fantamedia (fm)
+  - Filtro per presenze minime (5+ apparizioni)
+  - Visualizzazione fantaSquad e fantamedia per ogni giocatore
+  - Layout responsive mobile-first (12x16 su mobile, 20x28 su desktop)
+  - Caricamento immagini da fantacalcio.it
+
+### Bugfix
+- **Sincronizzazione Date Risultati Storici**: Risolto problema dove giornate 1-7 non mostravano date in "Risultati Storici"
+  - Ora utilizza fallback alle date predefinite della Serie A (da config.js) se non presenti in Firestore
+  - Sincronizzazione perfetta tra admin "Orari Giornate" e sezione "Risultati Storici"
+  - Rimozione duplicazione date nella visualizzazione
+
+### Modifiche
+- Aggiornamento versioning a v3.10
+- Miglioramento loading dati giornate per consistenza tra sezioni admin e utente
+
+---
+
 ## [3.9] - 2026-01-16
 
 ### Aggiunte

@@ -695,19 +695,18 @@ const setupListeners = () => {
             const results = snapshot.docs.map(doc => doc.data());
             state.setAllResults(results);
             
-            // Carica le date degli orari delle giornate
+            // Carica le date degli orari delle giornate per tutte le giornate (1-36)
             const giornateData = {};
             try {
-                const scheduleSnapshot = await getDocs(getScheduleCollectionRef());
-                scheduleSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.giornata && data.date) {
-                        // Normalizza la giornata come stringa per il matching
-                        const giornataKey = String(data.giornata);
-                        giornateData[giornataKey] = data.date;
-                        console.log(`[DEBUG Schedule] Giornata ${giornataKey}: ${data.date}`);
+                // Carica tutte le giornate usando la funzione che ha il fallback alle date predefinite
+                for (let g = 1; g <= 36; g++) {
+                    const schedule = await getGiornataSchedule(g);
+                    if (schedule && schedule.date) {
+                        const giornataKey = String(schedule.giornata);
+                        giornateData[giornataKey] = schedule.date;
+                        console.log(`[DEBUG Schedule] Giornata ${giornataKey}: ${schedule.date}`);
                     }
-                });
+                }
                 console.log('[DEBUG] giornateData caricato:', giornateData);
                 // Salva giornateData globalmente per accesso da altri componenti
                 window.giornateData = giornateData;

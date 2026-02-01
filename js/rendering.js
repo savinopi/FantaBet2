@@ -107,6 +107,10 @@ export const renderHistoricResults = (results, giornateData = {}) => {
         const matches = resultsByGiornata[giornata];
         matches.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+        // Ottieni la data della giornata da giornateData se disponibile
+        const giornataDate = giornateData[giornata];
+        console.log(`[DEBUG renderHistoricResults] Giornata ${giornata}: giornataDate="${giornataDate}"`);
+
         // Raggruppa per data all'interno della giornata
         const matchesByDate = matches.reduce((acc, match) => {
             const date = match.date || 'Senza Data';
@@ -115,10 +119,6 @@ export const renderHistoricResults = (results, giornateData = {}) => {
         }, {});
 
         const sortedDates = Object.keys(matchesByDate).sort((a, b) => new Date(a) - new Date(b));
-
-        // Ottieni la data della giornata da giornateData se disponibile
-        const giornataDate = giornateData[giornata];
-        console.log(`[DEBUG renderHistoricResults] Giornata ${giornata}: giornataDate="${giornataDate}"`);
 
         // Intestazione Giornata
         html += `
@@ -139,25 +139,17 @@ export const renderHistoricResults = (results, giornateData = {}) => {
                         Allegati
                     </button>
                 </div>
+                <div class="mb-6" data-giornata="${giornata}">
         `;
 
-        // Per ogni data della giornata
-        sortedDates.forEach(date => {
-            html += `
-                <div class="mb-6" data-giornata="${giornata}">
-                    <div class="text-sm font-semibold text-gray-400 mb-3 ml-2">
-                        ${formatDateItalian(date)}
-                    </div>
-            `;
-
-            // Partite della data
-            matchesByDate[date].forEach(res => {
-                const homeLogo = getTeamLogo(res.homeTeam);
-                const awayLogo = getTeamLogo(res.awayTeam);
-                
-                const [homeGoals, awayGoals] = (res.score && res.score !== 'N/A' && res.score !== '-') 
-                    ? res.score.split('-').map(s => parseInt(s.trim(), 10) || 0)
-                    : [0, 0];
+        // Mostra tutte le partite della giornata senza raggruppare per data
+        matches.forEach(res => {
+            const homeLogo = getTeamLogo(res.homeTeam);
+            const awayLogo = getTeamLogo(res.awayTeam);
+            
+            const [homeGoals, awayGoals] = (res.score && res.score !== 'N/A' && res.score !== '-') 
+                ? res.score.split('-').map(s => parseInt(s.trim(), 10) || 0)
+                : [0, 0];
 
                 // Semplifica i colori: solo 2 stati - Pareggio (giallo) e Vittoria (verde)
                 let scoreColor = 'text-gray-300';
@@ -236,12 +228,9 @@ export const renderHistoricResults = (results, giornateData = {}) => {
                         </div>
                     </div>
                 `;
-            });
-
-            html += `</div>`;
         });
 
-        html += `</div>`;
+        html += `</div></div>`;
     });
 
     table.innerHTML = html;
@@ -1415,6 +1404,17 @@ export const filterHistoricResults = () => {
 };
 
 // ===================================
+// UTILITY FUNCTIONS
+// ===================================
+
+/**
+ * Normalizza i nomi per il matching (rimuove accenti, spazi, minuscole)
+ */
+function normalizeName(name) {
+    return name.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// ===================================
 // TEAM OF THE SEASON
 // ===================================
 
@@ -1441,24 +1441,46 @@ export async function renderTeamOfTheSeason() {
         
         // Crea array di giocatori con statistiche (solo quelli in squadra)
         const allPlayersWithStats = playersSnapshot.docs
-            .map(doc => {
+            .map((doc, idx) => {
                 const player = doc.data();
                 const normalizedName = normalizeName(player.playerName);
                 const stats = statsMap.get(normalizedName);
                 
+                // Prendi team da stats se non disponibile in player
+                const teamFromStats = stats ? (stats.team || stats.serieATeam || stats.fantaSquad) : null;
+                const finalTeam = player.team || teamFromStats || 'No Team';
+                
+                if (idx < 3) {
+                    console.log(`👤 Player ${idx}: name="${player.playerName}" | player.team="${player.team}" | stats.team="${teamFromStats}" | finalTeam="${finalTeam}" | role="${player.role}" | cost="${player.cost}"`);
+                    if (stats) {
+                        console.log(`   Stats: mv="${stats.mv}" | fm="${stats.fm}" | role="${stats.role || stats.R}"`);
+                    } else {
+                        console.log(`   Stats: NOT FOUND`);
+                    }
+                }
+                
                 return {
                     name: player.playerName,
-                    team: player.team || 'No Team',
+                    team: finalTeam,
+                    fantaSquad: stats ? stats.fantaSquad : null,
                     role: player.role || player.R || (stats ? (stats.role || stats.R) : null),
                     mv: stats ? (parseFloat(stats.mv) || 0) : 0,
                     fm: stats ? (parseFloat(stats.fm) || 0) : 0,
+                    pv: stats ? (parseInt(stats.pv) || 0) : 0,
                     serieATeam: player.serieATeam || (stats ? stats.serieATeam : null),
-                    imageUrl: stats ? stats.imageUrl : null,
+                    id: stats ? (stats.playerId || stats.Id) : null,
                     cost: player.cost || 0
                 };
             })
-            .filter(p => p.team && p.team !== 'Svincolato' && p.team !== 'No Team') // Solo giocatori in squadra
-            .filter(p => p.mv > 0); // Solo con media voto
+            .filter(p => {
+                const pass1 = p.team && p.team !== 'Svincolato' && p.team !== 'No Team';
+                const pass2 = p.fm > 0;
+                const pass3 = p.pv >= 5;
+                if (!pass1) console.log(`❌ ${p.name}: Filtrato (team="${p.team}")`);
+                if (pass1 && !pass2) console.log(`❌ ${p.name}: Filtrato (fm=${p.fm})`);
+                if (pass1 && pass2 && !pass3) console.log(`❌ ${p.name}: Filtrato (pv=${p.pv} < 5)`);
+                return pass1 && pass2 && pass3;
+            })
         
         console.log(`👥 Giocatori in squadra con media voto: ${allPlayersWithStats.length}`);
         
@@ -1478,12 +1500,12 @@ export async function renderTeamOfTheSeason() {
         
         console.log(`📋 Raggruppamento per ruolo: P=${roleGroups['P'].length}, D=${roleGroups['D'].length}, C=${roleGroups['C'].length}, A=${roleGroups['A'].length}`);
         
-        // Ordina ogni ruolo per media voto descrescente e prendi i migliori
+        // Ordina ogni ruolo per fantamedia descrescente e prendi i migliori
         const formation = {
-            'P': roleGroups['P'].sort((a, b) => b.mv - a.mv).slice(0, 1),
-            'D': roleGroups['D'].sort((a, b) => b.mv - a.mv).slice(0, 4),
-            'C': roleGroups['C'].sort((a, b) => b.mv - a.mv).slice(0, 3),
-            'A': roleGroups['A'].sort((a, b) => b.mv - a.mv).slice(0, 3)
+            'P': roleGroups['P'].sort((a, b) => b.fm - a.fm).slice(0, 1),
+            'D': roleGroups['D'].sort((a, b) => b.fm - a.fm).slice(0, 4),
+            'C': roleGroups['C'].sort((a, b) => b.fm - a.fm).slice(0, 3),
+            'A': roleGroups['A'].sort((a, b) => b.fm - a.fm).slice(0, 3)
         };
         
         console.log('⚽ Formazione selezionata:', formation);
@@ -1499,34 +1521,54 @@ export async function renderTeamOfTheSeason() {
 }
 
 function renderTeamOfSeasonField(formation) {
+    console.log('🎨 Inizio rendering del campo...');
+    
     // Portiere
     const goalkeeperContainer = document.getElementById('team-season-goalkeeper');
-    goalkeeperContainer.innerHTML = formation['P'].map(player => createPlayerCard(player)).join('');
+    console.log(`🥅 Portiere container trovato:`, goalkeeperContainer ? 'SÌ' : 'NO', `| Giocatori: ${formation['P'].length}`);
+    if (goalkeeperContainer) {
+        goalkeeperContainer.innerHTML = formation['P'].map(player => createPlayerCard(player)).join('');
+    }
     
     // Difensori
     const defendersContainer = document.getElementById('team-season-defenders');
-    defendersContainer.innerHTML = formation['D'].map(player => createPlayerCard(player)).join('');
+    console.log(`🛡️ Difensori container trovato:`, defendersContainer ? 'SÌ' : 'NO', `| Giocatori: ${formation['D'].length}`);
+    if (defendersContainer) {
+        defendersContainer.innerHTML = formation['D'].map(player => createPlayerCard(player)).join('');
+    }
     
     // Centrocampisti
     const midfieldersContainer = document.getElementById('team-season-midfielders');
-    midfieldersContainer.innerHTML = formation['C'].map(player => createPlayerCard(player)).join('');
+    console.log(`⚙️ Centrocampisti container trovato:`, midfieldersContainer ? 'SÌ' : 'NO', `| Giocatori: ${formation['C'].length}`);
+    if (midfieldersContainer) {
+        midfieldersContainer.innerHTML = formation['C'].map(player => createPlayerCard(player)).join('');
+    }
     
     // Attaccanti
     const forwardsContainer = document.getElementById('team-season-forwards');
-    forwardsContainer.innerHTML = formation['A'].map(player => createPlayerCard(player)).join('');
+    console.log(`⚽ Attaccanti container trovato:`, forwardsContainer ? 'SÌ' : 'NO', `| Giocatori: ${formation['A'].length}`);
+    if (forwardsContainer) {
+        forwardsContainer.innerHTML = formation['A'].map(player => createPlayerCard(player)).join('');
+    }
+    
+    console.log('✨ Rendering completato');
 }
 
 function createPlayerCard(player) {
-    const imageUrl = player.imageUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23666" width="100" height="100"/%3E%3Ccircle cx="50" cy="35" r="20" fill="%23999"/%3E%3Cpath d="M50 55 Q30 55 25 70 L75 70 Q70 55 50 55" fill="%23999"/%3E%3C/svg%3E';
+    const imageUrl = player.id ? `https://content.fantacalcio.it/web/campioncini/20/card/${player.id}.png?v=466` : null;
+    const squadName = player.fantaSquad || player.team || 'Sconosciuta';
+    
+    console.log(`📇 Card per ${player.name}: FM=${player.fm.toFixed(2)} | FantaSquad=${squadName} | ID=${player.id}`);
     
     return `
-        <div class="flex flex-col items-center">
-            <div class="w-16 h-20 sm:w-20 sm:h-24 rounded-lg overflow-hidden border-2 border-yellow-300 shadow-lg bg-gray-800 flex items-center justify-center">
-                <img src="${imageUrl}" alt="${player.name}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+        <div class="flex flex-col items-center flex-shrink-0">
+            <div class="w-12 h-16 sm:w-16 sm:h-20 md:w-20 md:h-28 rounded-lg overflow-hidden border-2 border-yellow-400 shadow-lg bg-gray-800 flex items-center justify-center">
+                ${imageUrl ? `<img src="${imageUrl}" alt="${player.name}" class="w-full h-full object-cover" onerror="this.style.display='none'">` : '<div class="w-full h-full bg-gray-700"></div>'}
             </div>
-            <div class="text-center mt-2 text-xs sm:text-sm">
-                <p class="font-bold text-white truncate max-w-16 sm:max-w-20">${player.name}</p>
-                <p class="text-yellow-300 font-semibold">${player.mv.toFixed(2)}</p>
+            <div class="text-center mt-0.5 sm:mt-1 text-xs w-12 sm:w-16 md:w-20">
+                <p class="font-bold text-white truncate text-xs drop-shadow-lg leading-tight">${player.name}</p>
+                <p class="text-blue-300 text-xs font-semibold truncate drop-shadow-lg leading-tight hidden sm:block">${squadName}</p>
+                <p class="text-yellow-300 font-bold text-sm sm:text-base drop-shadow-lg leading-none">${player.fm.toFixed(2)}</p>
             </div>
         </div>
     `;

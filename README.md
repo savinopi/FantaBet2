@@ -1,6 +1,38 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.9**
+**Versione: 3.10**
+
+## 🆕 Changelog v3.10
+
+### Team of the Season Feature
+- **Formazione Ideale (1-4-3-3)**: Visualizzazione della migliore formazione della stagione nella sezione "Dati Lega"
+- **Selezione per Fantamedia**: Giocatori scelti in base al valore fantamedia (fm) anziché media voto
+- **Filtro Presenze**: Solo giocatori con 5+ apparizioni nella stagione vengono considerati
+- **Visualizzazione Completa**:
+  - Nome giocatore
+  - FantaSquad (squadra di appartenenza)
+  - Fantamedia (rating medio della stagione)
+  - Immagini da fantacalcio.it (200+ giocatori caricati)
+- **Layout Responsive Mobile-First**:
+  - Dimensioni card: 12x16px su mobile, 20x28px su desktop
+  - Distribuzione difesa su tutta la larghezza
+  - Centrocampo e attacco su righe singole
+  - Gap responsivo tra elementi
+- **Posizionamento in Dati Lega**: Nuova voce nel menu "Team of the Season" accanto a Risultati, Rose, Statistiche
+
+### Sincronizzazione Date Risultati Storici
+- **Fix Giornate 1-7**: Risolto problema dove le prime 7 giornate non mostravano date nella sezione "Risultati Storici"
+- **Fallback a Date Predefinite**: Se una data non è presente in Firestore, usa automaticamente la data predefinita della Serie A da config.js
+- **Coerenza Admin-Utente**:
+  - Admin section "Orari Giornate" e user section "Risultati Storici" usano lo stesso sistema di date
+  - Se l'admin salva una data custom, viene usata quella sia in admin che nell'area utente
+  - Altrimenti fallback alla data predefinita Serie A
+- **Rimozione Duplicazione**: Corretto bug che mostrava due volte la stessa data per giornata
+
+### Footer Update
+- **Versione aggiornata**: Cambiato da v3.9 a v3.10
+
+---
 
 ## 🆕 Changelog v3.9
 
