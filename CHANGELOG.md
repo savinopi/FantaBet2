@@ -2,6 +2,45 @@
 
 Tutti i cambiamenti notevoli di questo progetto saranno documentati in questo file.
 
+## [3.11] - 2026-02-04
+
+### Aggiunte
+- **Caricamento Excel XLSX**: Supporto completo per file Excel (.xlsx) in alternativa ai CSV
+  - Caricamento Statistiche da foglio "Tutti"
+  - Caricamento Calendario con layout dual-column (giornate pari/dispari)
+  - Caricamento Rose Squadre da foglio "TutteLeRose"
+  - Caricamento Formazioni Giornate con parsing avanzato (titolari, panchina, bonus)
+  - Supporto per numeri decimali in formato italiano (virgola → punto)
+  - Utilizzo libreria SheetJS (xlsx) per parsing affidabile
+
+- **Gestione Bonus Negativi**: Supporto completo per bonus negativi
+  - Visualizzazione corretta di bonus con valori negativi (es. -0,5)
+  - Stile visivo differenziato (rosso) per bonus negativi
+  - Parsing corretto di "Altri bonus" sia positivi che negativi
+
+- **Reset Formazioni per Giornata**: Nuova funzionalità admin
+  - Cancellazione selettiva di formazioni per una giornata specifica
+  - Input con validazione numero giornata (1-38)
+  - Rimozione dati caricati sia da CSV che da XLSX
+
+### Bugfix
+- **Parsing Formazioni da Excel**: Correzione offset colonne
+  - Colonna D = Voto base, Colonna E = Fantavoto (non più C e D)
+  - Corretto parsing da layout dual-column
+  - Bonus "Modificatore fairplay" e "Altri bonus" ora parsati correttamente
+
+- **Visualizzazione Bonus**: I bonus negativi erano nascosti nella UI
+  - Cambio filtro da `valore > 0` a `valore !== 0`
+  - Segno corretto nel display (+1 per positivi, -0.5 per negativi)
+
+### Modifiche
+- Aggiornamento versioning a v3.11
+- Spostamento CSV upload in sezione collapsibile `<details>`
+- Aggiunta pulsante "Cancella Formazioni" nella sezione Reset dati admin (colore arancione)
+- Miglioramento della struttura parser formazioni con debug logging
+
+---
+
 ## [3.10] - 2026-02-01
 
 ### Aggiunte

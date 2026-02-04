@@ -1,6 +1,47 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.10**
+**Versione: 3.11**
+
+## 🆕 Changelog v3.11
+
+### Supporto File Excel XLSX
+- **Caricamento Dati via XLSX**: Alternativa moderna ai CSV per caricare tutti i dati
+  - **Statistiche**: Lettura da foglio "Tutti" con skip automatico della riga titolo e colonna Rm
+  - **Calendario**: Layout dual-column (giornate dispari colonne A-E, giornate pari G-K)
+  - **Rose Squadre**: Lettura da foglio "TutteLeRose" con layout dual-column
+  - **Formazioni Giornate**: Parsing avanzato con titolari, panchina, voti e bonus
+- **Formato Italiano Supportato**: Numeri decimali con virgola (es. 6,5 → 6.5) convertiti automaticamente
+- **Libreria SheetJS**: Utilizzo di xlsx v0.20.1 per parsing affidabile e performante
+
+### Gestione Bonus Completa
+- **Bonus Negativi**: Visualizzazione corretta di bonus negativi (es. -0,5)
+  - Stile rosso con icona ✗ per bonus negativi nelle statistiche
+  - Stile verde con icona ✓ per bonus positivi
+- **Tipi di Bonus Supportati**:
+  - Modificatore difesa
+  - Modificatore fairplay (+1 o -0,5)
+  - Altri bonus (positivi e negativi)
+
+### Reset Dati Admin
+- **Cancellazione Formazioni Giornata**: Nuovo pulsante arancione nella sezione "Reset Dati"
+  - Input interattivo per selezionare la giornata (1-38)
+  - Rimozione completa dati formazioni per quella giornata
+  - Funziona sia per dati da CSV che da XLSX
+
+### Miglioramenti Interfaccia
+- **Organizzazione Upload**: CSV ora in sezione collapsibile `<details>`
+- **Pulsanti Upload XLSX**: Nuovi pulsanti verdi per file Excel (uno per tipo di dato)
+- **Progress Bar**: Barre di progresso separate per ogni tipo di caricamento
+
+### Bugfix
+- **Parsing Formazioni da Excel**: Correzione offset colonne
+  - Colonna D/J = Voto base (non più C/I)
+  - Colonna E/K = Fantavoto (non più D/J)
+- **Visualizzazione Bonus**: Bonus negativi non apparivano nella UI
+  - Filtro cambiato da `valore > 0` a `valore !== 0`
+  - Segno corretto nel display
+
+---
 
 ## 🆕 Changelog v3.10
 

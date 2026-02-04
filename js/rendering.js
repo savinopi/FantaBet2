@@ -1475,10 +1475,10 @@ export async function renderTeamOfTheSeason() {
             .filter(p => {
                 const pass1 = p.team && p.team !== 'Svincolato' && p.team !== 'No Team';
                 const pass2 = p.fm > 0;
-                const pass3 = p.pv >= 5;
+                const pass3 = p.pv >= 10;
                 if (!pass1) console.log(`❌ ${p.name}: Filtrato (team="${p.team}")`);
                 if (pass1 && !pass2) console.log(`❌ ${p.name}: Filtrato (fm=${p.fm})`);
-                if (pass1 && pass2 && !pass3) console.log(`❌ ${p.name}: Filtrato (pv=${p.pv} < 5)`);
+                if (pass1 && pass2 && !pass3) console.log(`❌ ${p.name}: Filtrato (pv=${p.pv} < 10)`);
                 return pass1 && pass2 && pass3;
             })
         

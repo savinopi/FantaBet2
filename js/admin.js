@@ -24,7 +24,8 @@ import {
     getResultsCollectionRef,
     getMatchesCollectionRef,
     getPlayersCollectionRef,
-    getPlayerStatsCollectionRef
+    getPlayerStatsCollectionRef,
+    getFormationsCollectionRef
 } from './firebase-config.js';
 import { messageBox, showProgressBar, hideProgressBar, updateProgress } from './utils.js';
 import { calculateOdds } from './bets.js';
@@ -808,6 +809,64 @@ export const clearAllBets = async () => {
 };
 
 /**
+ * Cancella le formazioni di una giornata specifica
+ */
+export const clearFormationsForGiornata = async () => {
+    const isUserAdmin = getIsUserAdmin();
+    if (!isUserAdmin) return;
+    
+    // Chiedi la giornata all'utente
+    const giornataInput = prompt('Inserisci il numero della giornata da resettare (es. 21):', '');
+    if (giornataInput === null || giornataInput.trim() === '') {
+        return; // Utente ha cancellato
+    }
+    
+    const giornata = parseInt(giornataInput);
+    if (isNaN(giornata) || giornata < 1 || giornata > 38) {
+        messageBox('Errore: Inserisci un numero di giornata valido (1-38)');
+        return;
+    }
+    
+    if (!confirm(`Sei sicuro di voler cancellare TUTTE le formazioni della giornata ${giornata}? Questa azione è irreversibile.`)) {
+        return;
+    }
+    
+    showProgressBar(`Cancellazione Formazioni Giornata ${giornata}`);
+    
+    try {
+        const formationsCollection = getFormationsCollectionRef();
+        const q = query(formationsCollection, where('giornata', '==', giornata));
+        const snapshot = await getDocs(q);
+        
+        const totalDocs = snapshot.docs.length;
+        if (totalDocs === 0) {
+            hideProgressBar();
+            messageBox(`Nessuna formazione trovata per la giornata ${giornata}.`);
+            return;
+        }
+        
+        let deletedCount = 0;
+        
+        for (const docSnapshot of snapshot.docs) {
+            await deleteDoc(docSnapshot.ref);
+            deletedCount++;
+            
+            const progress = (deletedCount / totalDocs) * 100;
+            updateProgress(progress, `Cancellazione in corso...`, deletedCount, totalDocs);
+        }
+        
+        hideProgressBar();
+        messageBox(`Cancellate ${deletedCount} formazioni della giornata ${giornata}.`);
+        console.log(`Cancellate ${deletedCount} formazioni della giornata ${giornata}`);
+        
+    } catch (error) {
+        console.error("Errore cancellazione formazioni:", error);
+        hideProgressBar();
+        messageBox(`Errore durante la cancellazione: ${error.message}`);
+    }
+};
+
+/**
  * Reset crediti di tutti gli utenti a 100
  */
 export const resetUserCredits = async () => {
@@ -1275,6 +1334,7 @@ export const setupGlobalAdminFunctions = () => {
     window.clearHistoricResults = clearHistoricResults;
     window.clearOpenMatches = clearOpenMatches;
     window.clearAllBets = clearAllBets;
+    window.clearFormationsForGiornata = clearFormationsForGiornata;
     window.resetUserCredits = resetUserCredits;
     window.clearAllTeams = clearAllTeams;
     window.clearSquadsData = clearSquadsData;

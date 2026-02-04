@@ -31,6 +31,10 @@ import { getAllTeams, getAllResults, setAllResults } from './state.js';
 // Variabili per il contenuto CSV caricato
 let localCsvContent = null;
 let selectedStatsFile = null;
+let selectedStatsXlsxFile = null; // File XLSX statistiche
+let selectedCalendarXlsxFile = null; // File XLSX calendario
+let selectedSquadsXlsxFile = null; // File XLSX rose
+let selectedFormationsXlsxFile = null; // File XLSX formazioni
 
 // Dipendenze esterne da settare
 let renderHistoricResults = null;
@@ -235,6 +239,308 @@ export const processUploadedData = async (fileName) => {
     
     if (processCsvContent) {
         await processCsvContent(localCsvContent);
+    }
+};
+
+// ==================== CALENDARIO DA EXCEL (XLSX) ====================
+
+/**
+ * Apre il dialog per selezionare il file Excel del calendario
+ */
+export const triggerCalendarXlsxFileInput = () => {
+    document.getElementById('calendar-xlsx-file-input').click();
+};
+
+/**
+ * Gestisce la selezione del file Excel del calendario
+ */
+export const handleCalendarXlsxFileSelect = () => {
+    const fileInput = document.getElementById('calendar-xlsx-file-input');
+    const fileNameDisplay = document.getElementById('calendar-xlsx-file-name-display');
+    const uploadButton = document.getElementById('upload-calendar-xlsx-button');
+    
+    if (fileInput.files.length > 0) {
+        selectedCalendarXlsxFile = fileInput.files[0];
+        fileNameDisplay.textContent = selectedCalendarXlsxFile.name;
+        uploadButton.disabled = false;
+        uploadButton.classList.remove('btn-secondary');
+        uploadButton.classList.add('btn-primary');
+    } else {
+        selectedCalendarXlsxFile = null;
+        fileNameDisplay.textContent = 'Nessun file selezionato.';
+        uploadButton.disabled = true;
+        uploadButton.classList.remove('btn-primary');
+        uploadButton.classList.add('btn-secondary');
+    }
+};
+
+/**
+ * Conferma il caricamento del calendario da Excel
+ */
+export const confirmCalendarXlsxUpload = () => {
+    if (!selectedCalendarXlsxFile) {
+        messageBox('Seleziona un file Excel prima di procedere.');
+        return;
+    }
+    
+    if (confirm(`Confermi il caricamento del calendario dal file "${selectedCalendarXlsxFile.name}"?\n\nATTENZIONE: I dati del calendario precedenti verranno sovrascritti.`)) {
+        processCalendarXlsxFile();
+    }
+};
+
+/**
+ * Processa il file Excel del calendario usando SheetJS
+ * Il file ha layout a doppia colonna:
+ * - Riga 1: Titolo
+ * - Riga 2: URL lega
+ * - Riga 3: vuota
+ * - Da riga 4: blocchi giornate (intestazione + 5 partite)
+ * - Colonne A-E: giornate dispari (1,3,5...)
+ * - Colonne G-K: giornate pari (2,4,6...)
+ */
+export const processCalendarXlsxFile = async () => {
+    if (!selectedCalendarXlsxFile) {
+        messageBox('Nessun file selezionato.');
+        return;
+    }
+    
+    const uploadButton = document.getElementById('upload-calendar-xlsx-button');
+    uploadButton.disabled = true;
+    uploadButton.textContent = 'Caricamento...';
+    
+    // Mostra progress bar
+    const progressContainer = document.getElementById('calendar-xlsx-progress');
+    if (progressContainer) progressContainer.classList.remove('hidden');
+    
+    try {
+        updateProgress(5, 'Lettura file Excel...', null, null, 'calendar-xlsx-progress');
+        
+        // Leggi il file Excel con SheetJS
+        const arrayBuffer = await selectedCalendarXlsxFile.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        
+        // Cerca il foglio "Calendario", altrimenti usa il primo foglio
+        let sheetName = 'Calendario';
+        if (!workbook.Sheets[sheetName]) {
+            console.warn('Foglio "Calendario" non trovato, uso il primo foglio disponibile');
+            sheetName = workbook.SheetNames[0];
+        }
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Converti in array di array (righe)
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        
+        console.log('Excel Calendario caricato:', {
+            foglio: sheetName,
+            righe: jsonData.length
+        });
+        
+        updateProgress(10, 'Parsing giornate...', null, null, 'calendar-xlsx-progress');
+        
+        // Struttura dati per le partite
+        const allMatches = []; // { giornata, homeTeam, homePoints, awayPoints, awayTeam, score }
+        const teamNames = new Set();
+        
+        // Parsing del file - inizia dalla riga 4 (indice 3)
+        let currentGiornataLeft = null;
+        let currentGiornataRight = null;
+        
+        for (let i = 3; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length === 0) continue;
+            
+            // Controlla se è una riga intestazione giornata (contiene "Giornata lega")
+            const cellA = String(row[0] || '').trim();
+            const cellG = String(row[6] || '').trim();
+            
+            // Colonna sinistra (A) - cerca "Xª Giornata lega"
+            if (cellA.includes('Giornata lega')) {
+                const matchNum = cellA.match(/(\d+)ª?\s*Giornata/i);
+                if (matchNum) {
+                    currentGiornataLeft = matchNum[1];
+                    console.log(`Trovata giornata sinistra: ${currentGiornataLeft}`);
+                }
+            }
+            
+            // Colonna destra (G) - cerca "Xª Giornata lega"
+            if (cellG.includes('Giornata lega')) {
+                const matchNum = cellG.match(/(\d+)ª?\s*Giornata/i);
+                if (matchNum) {
+                    currentGiornataRight = matchNum[1];
+                    console.log(`Trovata giornata destra: ${currentGiornataRight}`);
+                }
+            }
+            
+            // Se la cella A non contiene "Giornata" ma ha una squadra, è una partita
+            // Layout partita sinistra: A=Casa, B=P.Casa, C=P.Ospite, D=Ospite, E=Risultato
+            if (currentGiornataLeft && cellA && !cellA.includes('Giornata')) {
+                const homeTeam = cellA;
+                const homePoints = parseFloat(row[1]) || 0;
+                const awayPoints = parseFloat(row[2]) || 0;
+                const awayTeam = String(row[3] || '').trim();
+                const score = String(row[4] || '').trim();
+                
+                if (homeTeam && awayTeam) {
+                    allMatches.push({
+                        giornata: currentGiornataLeft,
+                        homeTeam,
+                        homePoints,
+                        awayPoints,
+                        awayTeam,
+                        score: score || '-'
+                    });
+                    teamNames.add(homeTeam);
+                    teamNames.add(awayTeam);
+                }
+            }
+            
+            // Layout partita destra: G=Casa, H=P.Casa, I=P.Ospite, J=Ospite, K=Risultato
+            if (currentGiornataRight && cellG && !cellG.includes('Giornata')) {
+                const homeTeam = cellG;
+                const homePoints = parseFloat(row[7]) || 0;
+                const awayPoints = parseFloat(row[8]) || 0;
+                const awayTeam = String(row[9] || '').trim();
+                const score = String(row[10] || '').trim();
+                
+                if (homeTeam && awayTeam) {
+                    allMatches.push({
+                        giornata: currentGiornataRight,
+                        homeTeam,
+                        homePoints,
+                        awayPoints,
+                        awayTeam,
+                        score: score || '-'
+                    });
+                    teamNames.add(homeTeam);
+                    teamNames.add(awayTeam);
+                }
+            }
+        }
+        
+        console.log(`Parsing completato: ${allMatches.length} partite trovate, ${teamNames.size} squadre`);
+        updateProgress(30, `Trovate ${allMatches.length} partite...`, null, null, 'calendar-xlsx-progress');
+        
+        // Separa partite giocate da quelle aperte
+        const resultsBatch = []; // Partite giocate (con risultato)
+        const matchesBatch = []; // Partite da aprire (score = '-')
+        
+        for (const match of allMatches) {
+            if (match.score === '-' || match.score === '') {
+                // Partita da aprire
+                matchesBatch.push({
+                    homeTeam: match.homeTeam,
+                    awayTeam: match.awayTeam,
+                    giornata: match.giornata,
+                    status: 'open',
+                    score: null,
+                    createdAt: new Date().toISOString()
+                });
+            } else if (match.score.includes('-')) {
+                // Partita giocata
+                const [homeGoals, awayGoals] = match.score.split('-').map(g => parseInt(g.trim(), 10));
+                let result = null;
+                
+                if (!isNaN(homeGoals) && !isNaN(awayGoals)) {
+                    if (homeGoals > awayGoals) result = '1';
+                    else if (homeGoals < awayGoals) result = '2';
+                    else result = 'X';
+                    
+                    resultsBatch.push({
+                        homeTeam: match.homeTeam,
+                        awayTeam: match.awayTeam,
+                        homePoints: match.homePoints,
+                        awayPoints: match.awayPoints,
+                        result,
+                        score: match.score,
+                        giornata: match.giornata,
+                        status: 'closed',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+        }
+        
+        console.log(`Partite giocate: ${resultsBatch.length}, Partite aperte: ${matchesBatch.length}`);
+        
+        // Salva le squadre
+        updateProgress(40, 'Salvataggio squadre...', null, null, 'calendar-xlsx-progress');
+        
+        for (const team of teamNames) {
+            if (team) {
+                const q = query(getTeamsCollectionRef(), where('name', '==', team), limit(1));
+                const existing = await getDocs(q);
+                if (existing.empty) {
+                    await addDoc(getTeamsCollectionRef(), {
+                        name: team,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            }
+        }
+        
+        // Salva i risultati (partite giocate)
+        updateProgress(55, 'Salvataggio risultati storici...', null, null, 'calendar-xlsx-progress');
+        
+        for (let i = 0; i < resultsBatch.length; i++) {
+            const res = resultsBatch[i];
+            const q = query(
+                getResultsCollectionRef(),
+                where('homeTeam', '==', res.homeTeam),
+                where('awayTeam', '==', res.awayTeam),
+                where('giornata', '==', res.giornata),
+                limit(1)
+            );
+            const existing = await getDocs(q);
+            if (existing.empty) {
+                await addDoc(getResultsCollectionRef(), res);
+            }
+            
+            if (i % 10 === 0) {
+                const progress = 55 + Math.floor((i / resultsBatch.length) * 20);
+                updateProgress(progress, `Salvati ${i + 1}/${resultsBatch.length} risultati...`, null, null, 'calendar-xlsx-progress');
+            }
+        }
+        
+        // Aggiorna partite aperte
+        updateProgress(80, 'Aggiornamento partite aperte...', null, null, 'calendar-xlsx-progress');
+        
+        // Rimuovi partite aperte vecchie
+        const matchesRef = getMatchesCollectionRef();
+        const oldMatches = await getDocs(query(matchesRef, where('status', '==', 'open')));
+        
+        for (const docSnapshot of oldMatches.docs) {
+            await deleteDoc(docSnapshot.ref);
+        }
+        
+        // Aggiungi nuove partite aperte
+        updateProgress(90, 'Creazione nuove partite...', null, null, 'calendar-xlsx-progress');
+        
+        for (let i = 0; i < matchesBatch.length; i++) {
+            await addDoc(matchesRef, matchesBatch[i]);
+        }
+        
+        updateProgress(100, 'Completato!', null, null, 'calendar-xlsx-progress');
+        
+        messageBox(`Calendario caricato da Excel!\n\n✅ ${teamNames.size} squadre\n✅ ${resultsBatch.length} risultati storici\n✅ ${matchesBatch.length} partite aperte`);
+        
+        // Reset UI dopo 2 secondi
+        setTimeout(() => {
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Carica Calendario da Excel';
+            if (progressContainer) progressContainer.classList.add('hidden');
+            
+            // Ricarica la pagina per aggiornare i dati
+            if (confirm('Calendario caricato! Vuoi ricaricare la pagina per vedere i nuovi dati?')) {
+                window.location.reload();
+            }
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Errore durante il caricamento del calendario da Excel:', error);
+        messageBox('Errore durante il caricamento: ' + error.message);
+        uploadButton.disabled = false;
+        uploadButton.textContent = 'Carica Calendario da Excel';
+        if (progressContainer) progressContainer.classList.add('hidden');
     }
 };
 
@@ -525,6 +831,333 @@ const renderSquadsData = (squadsMap) => {
     container.innerHTML = html;
 };
 
+// ==================== ROSE DA EXCEL (XLSX) ====================
+
+/**
+ * Apre il dialog per selezionare il file Excel delle rose
+ */
+export const triggerSquadsXlsxFileInput = () => {
+    document.getElementById('squads-xlsx-file-input').click();
+};
+
+/**
+ * Gestisce la selezione del file Excel delle rose
+ */
+export const handleSquadsXlsxFileSelect = () => {
+    const fileInput = document.getElementById('squads-xlsx-file-input');
+    const fileNameDisplay = document.getElementById('squads-xlsx-file-name-display');
+    const uploadButton = document.getElementById('upload-squads-xlsx-button');
+    
+    if (fileInput.files.length > 0) {
+        selectedSquadsXlsxFile = fileInput.files[0];
+        fileNameDisplay.textContent = selectedSquadsXlsxFile.name;
+        uploadButton.disabled = false;
+        uploadButton.classList.remove('btn-secondary');
+        uploadButton.classList.add('btn-primary');
+    } else {
+        selectedSquadsXlsxFile = null;
+        fileNameDisplay.textContent = 'Nessun file selezionato.';
+        uploadButton.disabled = true;
+        uploadButton.classList.remove('btn-primary');
+        uploadButton.classList.add('btn-secondary');
+    }
+};
+
+/**
+ * Conferma il caricamento delle rose da Excel
+ */
+export const confirmSquadsXlsxUpload = () => {
+    if (!selectedSquadsXlsxFile) {
+        messageBox('Seleziona un file Excel prima di procedere.');
+        return;
+    }
+    
+    if (confirm(`Confermi il caricamento delle rose dal file "${selectedSquadsXlsxFile.name}"?\n\nATTENZIONE: Le rose precedenti verranno sovrascritte.`)) {
+        processSquadsXlsxFile();
+    }
+};
+
+/**
+ * Processa il file Excel delle rose usando SheetJS
+ * Layout a doppia colonna:
+ * - Riga 1: Titolo
+ * - Riga 2: URL
+ * - Riga 3: Note
+ * - Riga 4: Vuota
+ * - Da riga 5: Blocchi squadre (nome squadra + header + calciatori + crediti residui)
+ * - Colonne A-D: squadre dispari
+ * - Colonne F-I: squadre pari
+ */
+export const processSquadsXlsxFile = async () => {
+    if (!selectedSquadsXlsxFile) {
+        messageBox('Nessun file selezionato.');
+        return;
+    }
+    
+    const uploadButton = document.getElementById('upload-squads-xlsx-button');
+    uploadButton.disabled = true;
+    uploadButton.textContent = 'Caricamento...';
+    
+    // Mostra progress bar
+    const progressContainer = document.getElementById('squads-xlsx-progress');
+    if (progressContainer) progressContainer.classList.remove('hidden');
+    
+    try {
+        updateProgress(5, 'Lettura file Excel...', null, null, 'squads-xlsx-progress');
+        
+        // Leggi il file Excel con SheetJS
+        const arrayBuffer = await selectedSquadsXlsxFile.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        
+        // Cerca il foglio "TutteLeRose", altrimenti usa il primo foglio
+        let sheetName = 'TutteLeRose';
+        if (!workbook.Sheets[sheetName]) {
+            console.warn('Foglio "TutteLeRose" non trovato, uso il primo foglio disponibile');
+            sheetName = workbook.SheetNames[0];
+        }
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Converti in array di array (righe)
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        
+        console.log('Excel Rose caricato:', {
+            foglio: sheetName,
+            righe: jsonData.length
+        });
+        
+        updateProgress(10, 'Caricamento IDs dai dati statistici...', null, null, 'squads-xlsx-progress');
+        
+        // Carica prima le statistiche per ottenere i playerId
+        const statsCollection = getPlayerStatsCollectionRef();
+        const statsSnapshot = await getDocs(statsCollection);
+        const playerIdMap = new Map(); // Nome normalizzato -> playerId
+        
+        statsSnapshot.forEach(doc => {
+            const stat = doc.data();
+            const normalizedName = (stat.playerName || '').trim().toLowerCase();
+            playerIdMap.set(normalizedName, stat.playerId);
+        });
+        
+        console.log(`IDs caricati: ${playerIdMap.size} giocatori trovati`);
+        
+        updateProgress(20, 'Parsing rose...', null, null, 'squads-xlsx-progress');
+        
+        // Struttura per raccogliere i dati
+        const players = [];
+        const squads = new Map(); // squadra -> array di giocatori
+        
+        // Stato parser per le due colonne
+        let currentSquadLeft = null;
+        let currentSquadRight = null;
+        let playersLeftCount = 0;
+        let playersRightCount = 0;
+        let isHeaderRowLeft = false;
+        let isHeaderRowRight = false;
+        
+        // Parsing del file - inizia dalla riga 5 (indice 4)
+        for (let i = 4; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length === 0) continue;
+            
+            const cellA = String(row[0] || '').trim();
+            const cellF = String(row[5] || '').trim();
+            
+            // === Colonna SINISTRA (A-D) ===
+            
+            // Controlla se è "Crediti Residui" - fine blocco squadra
+            if (cellA.includes('Crediti Residui')) {
+                // Se la squadra non ha calciatori, la ignoriamo (squadra vuota)
+                if (currentSquadLeft && playersLeftCount === 0) {
+                    console.log(`Squadra "${currentSquadLeft}" ignorata (nessun calciatore)`);
+                    squads.delete(currentSquadLeft);
+                }
+                currentSquadLeft = null;
+                playersLeftCount = 0;
+                isHeaderRowLeft = false;
+            }
+            // Controlla se è la riga header "Ruolo"
+            else if (cellA === 'Ruolo') {
+                isHeaderRowLeft = true;
+            }
+            // Controlla se è un ruolo valido (P/D/C/A) = è un calciatore
+            else if (['P', 'D', 'C', 'A'].includes(cellA) && currentSquadLeft) {
+                const role = cellA;
+                const playerName = String(row[1] || '').trim();
+                const serieATeam = String(row[2] || '').trim();
+                const cost = parseFloat(row[3]) || 0;
+                
+                if (playerName) {
+                    const normalizedName = playerName.toLowerCase();
+                    const playerId = playerIdMap.get(normalizedName);
+                    
+                    const playerData = {
+                        squadName: currentSquadLeft,
+                        role: role,
+                        playerName: playerName,
+                        serieATeam: serieATeam,
+                        cost: cost,
+                        playerId: playerId || null
+                    };
+                    
+                    players.push(playerData);
+                    squads.get(currentSquadLeft).push(playerData);
+                    playersLeftCount++;
+                }
+            }
+            // Altrimenti potrebbe essere il nome di una squadra
+            else if (cellA && !cellA.includes('Rose lega') && !cellA.includes('http') && !cellA.includes('Calciatori non') && cellA !== 'Ruolo') {
+                // Nuova squadra a sinistra
+                currentSquadLeft = cellA;
+                playersLeftCount = 0;
+                isHeaderRowLeft = false;
+                if (!squads.has(currentSquadLeft)) {
+                    squads.set(currentSquadLeft, []);
+                }
+            }
+            
+            // === Colonna DESTRA (F-I) ===
+            
+            // Controlla se è "Crediti Residui" - fine blocco squadra
+            if (cellF.includes('Crediti Residui')) {
+                // Se la squadra non ha calciatori, la ignoriamo (squadra vuota)
+                if (currentSquadRight && playersRightCount === 0) {
+                    console.log(`Squadra "${currentSquadRight}" ignorata (nessun calciatore)`);
+                    squads.delete(currentSquadRight);
+                }
+                currentSquadRight = null;
+                playersRightCount = 0;
+                isHeaderRowRight = false;
+            }
+            // Controlla se è la riga header "Ruolo"
+            else if (cellF === 'Ruolo') {
+                isHeaderRowRight = true;
+            }
+            // Controlla se è un ruolo valido (P/D/C/A) = è un calciatore
+            else if (['P', 'D', 'C', 'A'].includes(cellF) && currentSquadRight) {
+                const role = cellF;
+                const playerName = String(row[6] || '').trim();
+                const serieATeam = String(row[7] || '').trim();
+                const cost = parseFloat(row[8]) || 0;
+                
+                if (playerName) {
+                    const normalizedName = playerName.toLowerCase();
+                    const playerId = playerIdMap.get(normalizedName);
+                    
+                    const playerData = {
+                        squadName: currentSquadRight,
+                        role: role,
+                        playerName: playerName,
+                        serieATeam: serieATeam,
+                        cost: cost,
+                        playerId: playerId || null
+                    };
+                    
+                    players.push(playerData);
+                    squads.get(currentSquadRight).push(playerData);
+                    playersRightCount++;
+                }
+            }
+            // Altrimenti potrebbe essere il nome di una squadra
+            else if (cellF && !cellF.includes('Rose lega') && !cellF.includes('http') && !cellF.includes('Calciatori non') && cellF !== 'Ruolo') {
+                // Nuova squadra a destra
+                currentSquadRight = cellF;
+                playersRightCount = 0;
+                isHeaderRowRight = false;
+                if (!squads.has(currentSquadRight)) {
+                    squads.set(currentSquadRight, []);
+                }
+            }
+        }
+        
+        // Controllo finale per squadre vuote rimaste
+        if (currentSquadLeft && playersLeftCount === 0) {
+            console.log(`Squadra "${currentSquadLeft}" ignorata (nessun calciatore)`);
+            squads.delete(currentSquadLeft);
+        }
+        if (currentSquadRight && playersRightCount === 0) {
+            console.log(`Squadra "${currentSquadRight}" ignorata (nessun calciatore)`);
+            squads.delete(currentSquadRight);
+        }
+        
+        console.log('Rose parsate:', { 
+            totaleGiocatori: players.length, 
+            numeroSquadre: squads.size,
+            giocatoriConId: players.filter(p => p.playerId).length
+        });
+        
+        updateProgress(40, 'Cancellazione rose precedenti...', null, null, 'squads-xlsx-progress');
+        
+        // Salva i giocatori in Firestore
+        const playersCollection = getPlayersCollectionRef();
+        
+        // Prima cancella tutti i giocatori esistenti
+        const existingPlayersSnapshot = await getDocs(playersCollection);
+        const deletePromises = existingPlayersSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
+        updateProgress(50, 'Salvataggio nuovi giocatori...', null, null, 'squads-xlsx-progress');
+        
+        // Salva i nuovi giocatori
+        let savedCount = 0;
+        for (const player of players) {
+            await addDoc(playersCollection, player);
+            savedCount++;
+            
+            if (savedCount % 20 === 0) {
+                const progress = 50 + (savedCount / players.length) * 30;
+                updateProgress(progress, `Salvati ${savedCount}/${players.length} giocatori...`, null, null, 'squads-xlsx-progress');
+            }
+        }
+        
+        updateProgress(85, 'Salvataggio informazioni squadre...', null, null, 'squads-xlsx-progress');
+        
+        // Salva le informazioni aggregate per squadra
+        const squadsCollection = getSquadsCollectionRef();
+        
+        // Cancella squadre esistenti
+        const existingSquadsSnapshot = await getDocs(squadsCollection);
+        const deleteSquadsPromises = existingSquadsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deleteSquadsPromises);
+        
+        // Salva nuove squadre
+        for (const [squadName, squadPlayers] of squads.entries()) {
+            const squadData = {
+                name: squadName,
+                playerCount: squadPlayers.length,
+                totalCost: squadPlayers.reduce((sum, p) => sum + p.cost, 0),
+                roles: {
+                    P: squadPlayers.filter(p => p.role === 'P').length,
+                    D: squadPlayers.filter(p => p.role === 'D').length,
+                    C: squadPlayers.filter(p => p.role === 'C').length,
+                    A: squadPlayers.filter(p => p.role === 'A').length
+                }
+            };
+            await addDoc(squadsCollection, squadData);
+        }
+        
+        updateProgress(100, 'Completato!', null, null, 'squads-xlsx-progress');
+        
+        // Mostra riepilogo
+        renderSquadsData(squads);
+        
+        messageBox(`Rose caricate da Excel!\n\n✅ ${squads.size} squadre\n✅ ${players.length} giocatori totali\n✅ ${players.filter(p => p.playerId).length} con ID statistiche`);
+        
+        // Reset UI dopo 2 secondi
+        setTimeout(() => {
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Carica Rose da Excel';
+            if (progressContainer) progressContainer.classList.add('hidden');
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Errore durante il caricamento delle rose da Excel:', error);
+        messageBox('Errore durante il caricamento: ' + error.message);
+        uploadButton.disabled = false;
+        uploadButton.textContent = 'Carica Rose da Excel';
+        if (progressContainer) progressContainer.classList.add('hidden');
+    }
+};
+
 // ==================== STATISTICHE CALCIATORI ====================
 
 /**
@@ -703,6 +1336,217 @@ export const processStatsFile = async () => {
         messageBox('Errore durante il caricamento: ' + error.message);
         uploadButton.disabled = false;
         uploadButton.textContent = 'Carica Statistiche';
+    }
+};
+
+// ==================== STATISTICHE DA EXCEL (XLSX) ====================
+
+/**
+ * Apre il dialog per selezionare il file Excel delle statistiche
+ */
+export const triggerStatsXlsxFileInput = () => {
+    document.getElementById('stats-xlsx-file-input').click();
+};
+
+/**
+ * Gestisce la selezione del file Excel delle statistiche
+ */
+export const handleStatsXlsxFileSelect = () => {
+    const fileInput = document.getElementById('stats-xlsx-file-input');
+    const fileNameDisplay = document.getElementById('stats-xlsx-file-name-display');
+    const uploadButton = document.getElementById('upload-stats-xlsx-button');
+    
+    if (fileInput.files.length > 0) {
+        selectedStatsXlsxFile = fileInput.files[0];
+        fileNameDisplay.textContent = selectedStatsXlsxFile.name;
+        uploadButton.disabled = false;
+        uploadButton.classList.remove('btn-secondary');
+        uploadButton.classList.add('btn-primary');
+    } else {
+        selectedStatsXlsxFile = null;
+        fileNameDisplay.textContent = 'Nessun file selezionato.';
+        uploadButton.disabled = true;
+        uploadButton.classList.remove('btn-primary');
+        uploadButton.classList.add('btn-secondary');
+    }
+};
+
+/**
+ * Conferma il caricamento delle statistiche da Excel
+ */
+export const confirmStatsXlsxUpload = () => {
+    if (!selectedStatsXlsxFile) {
+        messageBox('Seleziona un file Excel prima di procedere.');
+        return;
+    }
+    
+    if (confirm(`Confermi il caricamento delle statistiche dal file "${selectedStatsXlsxFile.name}"?\n\nATTENZIONE: Le statistiche precedenti verranno sovrascritte.`)) {
+        processStatsXlsxFile();
+    }
+};
+
+/**
+ * Processa il file Excel delle statistiche usando SheetJS
+ */
+export const processStatsXlsxFile = async () => {
+    if (!selectedStatsXlsxFile) {
+        messageBox('Nessun file selezionato.');
+        return;
+    }
+    
+    const uploadButton = document.getElementById('upload-stats-xlsx-button');
+    uploadButton.disabled = true;
+    uploadButton.textContent = 'Caricamento...';
+    
+    try {
+        // Leggi il file Excel con SheetJS
+        const arrayBuffer = await selectedStatsXlsxFile.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        
+        // Cerca il foglio "Tutti", altrimenti usa il primo foglio
+        let sheetName = 'Tutti';
+        if (!workbook.Sheets[sheetName]) {
+            console.warn('Foglio "Tutti" non trovato, uso il primo foglio disponibile');
+            sheetName = workbook.SheetNames[0];
+        }
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Converti in array di array (righe)
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        
+        // Il file ha: Riga 1 = Titolo, Riga 2 = Intestazioni, Dati da Riga 3
+        // Quindi servono almeno 3 righe (indici 0, 1, 2+)
+        if (jsonData.length < 3) {
+            throw new Error('File Excel vuoto o non valido. Deve contenere almeno il titolo, le intestazioni e una riga di dati.');
+        }
+        
+        console.log('Excel caricato:', {
+            foglio: sheetName,
+            righe: jsonData.length,
+            colonne: jsonData[1]?.length,
+            intestazioni: jsonData[1] // Riga 2 = intestazioni (indice 1)
+        });
+        
+        // Parse delle statistiche
+        const stats = [];
+        const playersCollection = getPlayersCollectionRef();
+        const statsCollection = getPlayerStatsCollectionRef();
+        
+        // Carica tutte le rose per associare i calciatori alle squadre fantacalcio
+        updateProgress(0, 'Caricamento rose...', null, null, 'stats-progress');
+        const playersSnapshot = await getDocs(playersCollection);
+        const playerToSquadMap = new Map(); // Nome calciatore -> Rosa fantacalcio
+        
+        playersSnapshot.forEach(doc => {
+            const player = doc.data();
+            // Chiave: nome calciatore normalizzato
+            const normalizedName = player.playerName.trim().toLowerCase();
+            playerToSquadMap.set(normalizedName, player.squadName);
+        });
+        
+        console.log(`Rose caricate: ${playerToSquadMap.size} calciatori trovati`);
+        
+        // Parsing del file Excel
+        // Riga 0 = Titolo (ignorata), Riga 1 = Intestazioni (ignorata), Dati da Riga 2+
+        // Colonne Excel: A=Id, B=R, C=Rm(IGNORATA), D=Nome, E=Squadra, F=Pv, G=Mv, H=Fm, I=Gf, J=Gs, K=Rp, L=Rc, M=R+, N=R-, O=Ass, P=Amm, Q=Esp, R=Au
+        // Indici:        0=Id, 1=R, 2=Rm(IGNORATA), 3=Nome, 4=Squadra, 5=Pv, 6=Mv, 7=Fm, 8=Gf, 9=Gs, 10=Rp, 11=Rc, 12=R+, 13=R-, 14=Ass, 15=Amm, 16=Esp, 17=Au
+        let validLines = 0;
+        let skippedLines = 0;
+        
+        for (let i = 2; i < jsonData.length; i++) { // Inizia da indice 2 (riga 3 Excel)
+            const row = jsonData[i];
+            if (!row || row.length === 0) continue;
+            
+            // Verifica che ci siano abbastanza colonne (18 colonne: A-R)
+            if (row.length < 18) {
+                console.warn(`Riga ${i + 1} ignorata: colonne insufficienti (${row.length}/18)`, row);
+                skippedLines++;
+                continue;
+            }
+            
+            // Colonna D (indice 3) = Nome
+            const playerName = String(row[3] || '').trim();
+            if (!playerName) {
+                skippedLines++;
+                continue;
+            }
+            
+            const normalizedName = playerName.toLowerCase();
+            const fantaSquad = playerToSquadMap.get(normalizedName) || 'SVINCOLATI';
+            
+            // Mappatura colonne (ignorando colonna C=Rm)
+            const statData = {
+                playerId: String(row[0] || ''),      // A = Id
+                role: String(row[1] || ''),          // B = R (ruolo)
+                // row[2] = Rm (IGNORATA)
+                playerName: playerName,              // D = Nome
+                serieATeam: String(row[4] || ''),    // E = Squadra
+                fantaSquad: fantaSquad,
+                pv: parseFloat(row[5]) || 0,         // F = Pv
+                mv: parseFloat(row[6]) || 0,         // G = Mv
+                fm: parseFloat(row[7]) || 0,         // H = Fm
+                gf: parseInt(row[8]) || 0,           // I = Gf
+                gs: parseInt(row[9]) || 0,           // J = Gs
+                rp: parseInt(row[10]) || 0,          // K = Rp
+                rc: parseInt(row[11]) || 0,          // L = Rc
+                rPlus: parseInt(row[12]) || 0,       // M = R+
+                rMinus: parseInt(row[13]) || 0,      // N = R-
+                ass: parseInt(row[14]) || 0,         // O = Ass
+                amm: parseInt(row[15]) || 0,         // P = Amm
+                esp: parseInt(row[16]) || 0,         // Q = Esp
+                au: parseInt(row[17]) || 0,          // R = Au
+                lastUpdate: new Date().toISOString()
+            };
+            
+            stats.push(statData);
+            validLines++;
+            
+            // Progress update ogni 50 righe
+            if (validLines % 50 === 0) {
+                const progress = Math.floor((validLines / (jsonData.length - 2)) * 50); // -2 perché saltiamo titolo e intestazioni
+                updateProgress(progress, `Parsing: ${validLines} calciatori...`, null, null, 'stats-progress');
+            }
+        }
+        
+        console.log(`Parsing completato: ${validLines} statistiche valide, ${skippedLines} righe ignorate`);
+        updateProgress(50, `Cancellazione statistiche precedenti...`, null, null, 'stats-progress');
+        
+        // Cancella tutte le statistiche esistenti
+        const existingStatsSnapshot = await getDocs(statsCollection);
+        const deletePromises = existingStatsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
+        console.log(`${deletePromises.length} statistiche precedenti cancellate`);
+        updateProgress(60, `Salvataggio nuove statistiche...`, null, null, 'stats-progress');
+        
+        // Salva le nuove statistiche
+        for (let i = 0; i < stats.length; i++) {
+            await addDoc(statsCollection, stats[i]);
+            
+            // Progress update ogni 20 salvataggi
+            if (i % 20 === 0 || i === stats.length - 1) {
+                const progress = 60 + Math.floor((i / stats.length) * 40);
+                updateProgress(progress, `Salvate ${i + 1}/${stats.length} statistiche...`, null, null, 'stats-progress');
+            }
+        }
+        
+        updateProgress(100, 'Completato!', null, null, 'stats-progress');
+        messageBox(`Statistiche caricate con successo da Excel! ${validLines} calciatori aggiornati.`);
+        
+        // Mostra riepilogo
+        renderStatsSummary(stats);
+        
+        // Reset UI
+        setTimeout(() => {
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Carica da Excel';
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Errore durante il caricamento delle statistiche da Excel:', error);
+        messageBox('Errore durante il caricamento: ' + error.message);
+        uploadButton.disabled = false;
+        uploadButton.textContent = 'Carica da Excel';
     }
 };
 
@@ -1075,6 +1919,488 @@ const renderFormationsData = (formazioni, giornateSet, squadreSet) => {
     container.innerHTML = html;
 };
 
+// ==================== FORMAZIONI DA EXCEL (XLSX) ====================
+
+/**
+ * Apre il dialog per selezionare il file Excel delle formazioni
+ */
+export const triggerFormationsXlsxFileInput = () => {
+    document.getElementById('formations-xlsx-file-input').click();
+};
+
+/**
+ * Gestisce la selezione del file Excel delle formazioni
+ */
+export const handleFormationsXlsxFileSelect = () => {
+    const fileInput = document.getElementById('formations-xlsx-file-input');
+    const fileNameDisplay = document.getElementById('formations-xlsx-file-name-display');
+    const uploadButton = document.getElementById('upload-formations-xlsx-button');
+    
+    if (fileInput.files.length > 0) {
+        selectedFormationsXlsxFile = fileInput.files[0];
+        fileNameDisplay.textContent = selectedFormationsXlsxFile.name;
+        uploadButton.disabled = false;
+        uploadButton.classList.remove('btn-secondary');
+        uploadButton.classList.add('btn-primary');
+    } else {
+        selectedFormationsXlsxFile = null;
+        fileNameDisplay.textContent = 'Nessun file selezionato.';
+        uploadButton.disabled = true;
+        uploadButton.classList.remove('btn-primary');
+        uploadButton.classList.add('btn-secondary');
+    }
+};
+
+/**
+ * Conferma il caricamento delle formazioni da Excel
+ */
+export const confirmFormationsXlsxUpload = () => {
+    if (!selectedFormationsXlsxFile) {
+        messageBox('Seleziona un file Excel prima di procedere.');
+        return;
+    }
+    
+    if (confirm(`Confermi il caricamento delle formazioni dal file "${selectedFormationsXlsxFile.name}"?\n\nATTENZIONE: Le formazioni precedenti per questa giornata verranno sovrascritte.`)) {
+        processFormationsXlsxFile();
+    }
+};
+
+/**
+ * Processa il file Excel delle formazioni usando SheetJS
+ * Layout: Doppia colonna con partite (casa a sinistra, ospite a destra)
+ * 
+ * Struttura per ogni partita:
+ * - Riga nome squadra + risultato
+ * - Riga modulo
+ * - Righe titolari (P/D/C/A)
+ * - "Panchina"
+ * - Righe panchina
+ * - "Modificatore difesa" + valore
+ * - "Altri bonus" + valore (NUOVO!)
+ * - "TOTALE:" + valore
+ * - "Inserita via..." timestamp
+ */
+export const processFormationsXlsxFile = async () => {
+    if (!selectedFormationsXlsxFile) {
+        messageBox('Nessun file selezionato.');
+        return;
+    }
+    
+    const uploadButton = document.getElementById('upload-formations-xlsx-button');
+    uploadButton.disabled = true;
+    uploadButton.textContent = 'Caricamento...';
+    
+    // Mostra progress bar
+    const progressContainer = document.getElementById('formations-xlsx-progress');
+    if (progressContainer) progressContainer.classList.remove('hidden');
+    
+    try {
+        updateProgress(5, 'Lettura file Excel...', null, null, 'formations-xlsx-progress');
+        
+        // Leggi il file Excel con SheetJS
+        const arrayBuffer = await selectedFormationsXlsxFile.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        
+        // Cerca un foglio che contiene "Formazioni" nel nome
+        let sheetName = workbook.SheetNames.find(name => name.toLowerCase().includes('formazioni'));
+        if (!sheetName) {
+            sheetName = workbook.SheetNames[0];
+            console.warn('Foglio "Formazioni" non trovato, uso il primo foglio:', sheetName);
+        }
+        console.log('Fogli disponibili:', workbook.SheetNames);
+        console.log('Foglio selezionato:', sheetName);
+        
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Converti in array di array (righe)
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        
+        console.log('Righe totali nel file:', jsonData.length);
+        console.log('Prime 5 righe:', jsonData.slice(0, 5));
+        
+        // Estrai la giornata dal nome del foglio (es. "Formazioni 21 giornata" -> 21)
+        let giornata = 0;
+        const giornataMatch = sheetName.match(/(\d+)\s*giornata/i);
+        if (giornataMatch) {
+            giornata = parseInt(giornataMatch[1]);
+        } else {
+            // Prova a cercare nel titolo del foglio (riga 1)
+            if (jsonData[0]) {
+                const titleMatch = String(jsonData[0][0] || '').match(/Giornata\s*(\d+)/i);
+                if (titleMatch) {
+                    giornata = parseInt(titleMatch[1]);
+                }
+            }
+        }
+        
+        if (giornata === 0) {
+            throw new Error('Impossibile determinare la giornata dal file. Assicurati che il nome del foglio contenga "Formazioni XX giornata" oppure che la prima riga contenga "Giornata XX".');
+        }
+        
+        console.log('Excel Formazioni caricato:', {
+            foglio: sheetName,
+            giornata: giornata
+        });
+        
+        updateProgress(15, `Parsing formazioni giornata ${giornata}...`, null, null, 'formations-xlsx-progress');
+        
+        // Struttura dati
+        const formazioni = [];
+        const bonuses = [];
+        const squadreSet = new Set();
+        
+        // Stato parser
+        let currentSquadLeft = null;
+        let currentSquadRight = null;
+        let currentAvversarioLeft = null;
+        let currentAvversarioRight = null;
+        let currentResultLeft = null;
+        let currentResultRight = null;
+        let currentModuloLeft = null;
+        let currentModuloRight = null;
+        let currentSectionLeft = 'TITOLARE'; // TITOLARE o PANCHINA
+        let currentSectionRight = 'TITOLARE';
+        let matchIdCounter = 0;
+        let currentMatchIdLeft = null;
+        let currentMatchIdRight = null;
+        
+        // Parsing del file - inizia dalla riga 4 (indice 3)
+        for (let i = 3; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length === 0) continue;
+            
+            const cellA = String(row[0] || '').trim();
+            const cellB = String(row[1] || '').trim();
+            const cellC = String(row[2] || '').trim();
+            const cellD = String(row[3] || '').trim();
+            const cellE = String(row[4] || '').trim();
+            
+            const cellG = String(row[6] || '').trim();
+            const cellH = String(row[7] || '').trim();
+            const cellI = String(row[8] || '').trim();
+            const cellJ = String(row[9] || '').trim();
+            const cellK = String(row[10] || '').trim();
+            
+            // Debug: mostra le prime righe per capire la struttura
+            if (i < 10) {
+                console.log(`Riga ${i}: A="${cellA}" B="${cellB}" C="${cellC}" D="${cellD}" E="${cellE}" | G="${cellG}" H="${cellH}"`);
+            }
+            
+            // === Identificazione righe speciali ===
+            
+            // Riga nome squadra + risultato (es. "DISAGIATI FC" | | | "2-4" | | | "FC SANTA CLAUS")
+            // La riga ha un risultato in colonna F (indice 5) e squadra ospite in G
+            // Oppure risultato in E (indice 4)
+            const cellF = String(row[5] || '').trim();
+            const resultPattern = /^\d+-\d+$/;
+            
+            // Cerca il risultato in E o F
+            let foundResult = null;
+            if (cellE && resultPattern.test(cellE)) {
+                foundResult = cellE;
+            } else if (cellF && resultPattern.test(cellF)) {
+                foundResult = cellF;
+            }
+            
+            if (foundResult && cellA && cellG) {
+                // Nuova partita trovata
+                matchIdCounter++;
+                currentMatchIdLeft = `G${giornata}_M${matchIdCounter}`;
+                currentMatchIdRight = currentMatchIdLeft;
+                
+                currentSquadLeft = cellA;
+                currentSquadRight = cellG;
+                currentAvversarioLeft = cellG;
+                currentAvversarioRight = cellA;
+                currentResultLeft = foundResult;
+                currentResultRight = foundResult;
+                currentSectionLeft = 'TITOLARE';
+                currentSectionRight = 'TITOLARE';
+                
+                squadreSet.add(currentSquadLeft);
+                squadreSet.add(currentSquadRight);
+                
+                console.log(`Partita trovata: ${currentSquadLeft} vs ${currentSquadRight} (${foundResult})`);
+                continue;
+            }
+            
+            // Riga modulo (numero come "433", "451", "352")
+            if (cellA && cellA.match(/^\d{3,4}/) && !cellB) {
+                currentModuloLeft = cellA;
+            }
+            if (cellG && cellG.match(/^\d{3,4}/) && !cellH) {
+                currentModuloRight = cellG;
+            }
+            
+            // Riga "Panchina"
+            if (cellB === 'Panchina' || cellA === 'Panchina') {
+                currentSectionLeft = 'PANCHINA';
+            }
+            if (cellH === 'Panchina' || cellG === 'Panchina') {
+                currentSectionRight = 'PANCHINA';
+            }
+            
+            // Funzione helper per parsare numeri con virgola italiana
+            const parseItalianNumber = (str) => {
+                if (!str) return 0;
+                // Sostituisce la virgola con il punto per parseFloat
+                const normalized = String(str).replace(',', '.');
+                return parseFloat(normalized) || 0;
+            };
+            
+            // Riga "Modificatore difesa"
+            if (cellA === 'Modificatore difesa' && currentSquadLeft) {
+                const valore = parseItalianNumber(cellE);
+                if (valore !== 0) {
+                    bonuses.push({
+                        giornata,
+                        matchId: currentMatchIdLeft,
+                        squadra: currentSquadLeft,
+                        avversario: currentAvversarioLeft,
+                        bonus: { nome: 'Modificatore difesa', valore },
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            if (cellG === 'Modificatore difesa' && currentSquadRight) {
+                const valore = parseItalianNumber(cellK);
+                if (valore !== 0) {
+                    bonuses.push({
+                        giornata,
+                        matchId: currentMatchIdRight,
+                        squadra: currentSquadRight,
+                        avversario: currentAvversarioRight,
+                        bonus: { nome: 'Modificatore difesa', valore },
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            
+            // Riga "Modificatore fairplay" (NUOVO!)
+            if (cellA === 'Modificatore fairplay' && currentSquadLeft) {
+                const valore = parseItalianNumber(cellE);
+                if (valore !== 0) {
+                    bonuses.push({
+                        giornata,
+                        matchId: currentMatchIdLeft,
+                        squadra: currentSquadLeft,
+                        avversario: currentAvversarioLeft,
+                        bonus: { nome: 'Modificatore fairplay', valore },
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            if (cellG === 'Modificatore fairplay' && currentSquadRight) {
+                const valore = parseItalianNumber(cellK);
+                if (valore !== 0) {
+                    bonuses.push({
+                        giornata,
+                        matchId: currentMatchIdRight,
+                        squadra: currentSquadRight,
+                        avversario: currentAvversarioRight,
+                        bonus: { nome: 'Modificatore fairplay', valore },
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            
+            // Riga "Altri bonus"
+            if (cellA === 'Altri bonus' && currentSquadLeft) {
+                console.log(`DEBUG Altri bonus SX: cellA="${cellA}" cellB="${cellB}" cellC="${cellC}" cellD="${cellD}" cellE="${cellE}"`);
+                const valore = parseItalianNumber(cellE);
+                console.log(`DEBUG Altri bonus SX valore parsato: ${valore}`);
+                if (valore !== 0) {
+                    bonuses.push({
+                        giornata,
+                        matchId: currentMatchIdLeft,
+                        squadra: currentSquadLeft,
+                        avversario: currentAvversarioLeft,
+                        bonus: { nome: 'Altri bonus', valore },
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            if (cellG === 'Altri bonus' && currentSquadRight) {
+                console.log(`DEBUG Altri bonus DX: cellG="${cellG}" cellH="${cellH}" cellI="${cellI}" cellJ="${cellJ}" cellK="${cellK}"`);
+                const valore = parseItalianNumber(cellK);
+                console.log(`DEBUG Altri bonus DX valore parsato: ${valore}`);
+                if (valore !== 0) {
+                    bonuses.push({
+                        giornata,
+                        matchId: currentMatchIdRight,
+                        squadra: currentSquadRight,
+                        avversario: currentAvversarioRight,
+                        bonus: { nome: 'Altri bonus', valore },
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            
+            // Riga "TOTALE:" - fine del blocco squadra
+            if (cellC && String(cellC).includes('TOTALE')) {
+                currentSquadLeft = null;
+                currentModuloLeft = null;
+                currentSectionLeft = 'TITOLARE';
+            }
+            if (cellI && String(cellI).includes('TOTALE')) {
+                currentSquadRight = null;
+                currentModuloRight = null;
+                currentSectionRight = 'TITOLARE';
+            }
+            
+            // === Righe calciatori ===
+            // Layout: Ruolo | Nome | (vuota) | Voto | FantaVoto
+            // Colonne: A=Ruolo, B=Nome, C=vuota, D=Voto, E=Fantavoto
+            
+            // Colonna sinistra
+            if (['P', 'D', 'C', 'A'].includes(cellA) && cellB && currentSquadLeft) {
+                const ruolo = cellA;
+                const calciatore = cellB.replace(/\s*\*\s*$/, ''); // Rimuove asterisco
+                
+                // Colonna D = voto base, Colonna E = fantavoto
+                const voto_base = parseItalianNumber(cellD) || null;
+                const fantavoto = parseItalianNumber(cellE) || null;
+                const ha_giocato = voto_base !== null && voto_base > 0;
+                
+                formazioni.push({
+                    giornata,
+                    matchId: currentMatchIdLeft,
+                    squadra: currentSquadLeft,
+                    avversario: currentAvversarioLeft,
+                    lato: 'casa',
+                    punteggio: currentResultLeft,
+                    formazione: currentModuloLeft,
+                    sezione: currentSectionLeft,
+                    ruolo,
+                    calciatore,
+                    voto_base,
+                    fantavoto,
+                    ha_giocato,
+                    fantavoto_in_verde: fantavoto !== null ? 1 : 0,
+                    record_tipo: 'GIOCATORE',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // Colonna destra
+            // Colonne: G=Ruolo, H=Nome, I=vuota, J=Voto, K=Fantavoto
+            if (['P', 'D', 'C', 'A'].includes(cellG) && cellH && currentSquadRight) {
+                const ruolo = cellG;
+                const calciatore = cellH.replace(/\s*\*\s*$/, ''); // Rimuove asterisco
+                // Colonna J = voto base, Colonna K = fantavoto
+                const voto_base = parseItalianNumber(cellJ) || null;
+                const fantavoto = parseItalianNumber(cellK) || null;
+                const ha_giocato = voto_base !== null && voto_base > 0;
+                
+                formazioni.push({
+                    giornata,
+                    matchId: currentMatchIdRight,
+                    squadra: currentSquadRight,
+                    avversario: currentAvversarioRight,
+                    lato: 'ospite',
+                    punteggio: currentResultRight,
+                    formazione: currentModuloRight,
+                    sezione: currentSectionRight,
+                    ruolo,
+                    calciatore,
+                    voto_base,
+                    fantavoto,
+                    ha_giocato,
+                    fantavoto_in_verde: fantavoto !== null ? 1 : 0,
+                    record_tipo: 'GIOCATORE',
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
+        
+        console.log(`Formazioni parsate: ${formazioni.length} giocatori, ${bonuses.length} bonus`);
+        
+        // DEBUG: Mostra i primi 5 giocatori come esempio
+        console.log('PRIMI 5 GIOCATORI PARSATI:', formazioni.slice(0, 5).map(f => ({
+            giornata: f.giornata,
+            squadra: f.squadra,
+            calciatore: f.calciatore,
+            ruolo: f.ruolo,
+            voto_base: f.voto_base,
+            fantavoto: f.fantavoto,
+            sezione: f.sezione
+        })));
+        
+        if (formazioni.length === 0) {
+            throw new Error('Nessuna formazione trovata nel file. Verifica il formato.');
+        }
+        
+        updateProgress(50, 'Cancellazione formazioni precedenti...', null, null, 'formations-xlsx-progress');
+        
+        // Salva i dati in Firestore
+        const formationsCollection = getFormationsCollectionRef();
+        
+        // Cancella formazioni esistenti per questa giornata
+        const q = query(formationsCollection, where('giornata', '==', giornata));
+        const snapshot = await getDocs(q);
+        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
+        updateProgress(60, 'Salvataggio nuove formazioni...', null, null, 'formations-xlsx-progress');
+        
+        // Salva nuove formazioni
+        let savedCount = 0;
+        for (const formazione of formazioni) {
+            await addDoc(formationsCollection, formazione);
+            savedCount++;
+            
+            if (savedCount % 30 === 0) {
+                const progress = 60 + (savedCount / formazioni.length) * 25;
+                updateProgress(progress, `Salvati ${savedCount}/${formazioni.length} record...`, null, null, 'formations-xlsx-progress');
+            }
+        }
+        
+        // Salva i bonus
+        updateProgress(90, 'Salvataggio bonus...', null, null, 'formations-xlsx-progress');
+        
+        if (bonuses.length > 0) {
+            const { collection } = await import('./firebase-config.js');
+            const dbModule = await import('./firebase-config.js');
+            const bonusesCollection = collection(dbModule.db, 'fantabet_squad_bonuses');
+            
+            // Cancella bonus precedenti per questa giornata
+            const qBonus = query(bonusesCollection, where('giornata', '==', giornata));
+            const snapshotBonus = await getDocs(qBonus);
+            const deleteBonusPromises = snapshotBonus.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(deleteBonusPromises);
+            
+            // Salva nuovi bonus
+            for (const bonus of bonuses) {
+                await addDoc(bonusesCollection, bonus);
+            }
+            
+            console.log(`Bonus salvati: ${bonuses.length}`);
+        }
+        
+        updateProgress(100, 'Completato!', null, null, 'formations-xlsx-progress');
+        
+        // Mostra riepilogo
+        const giornateSet = new Set([giornata]);
+        renderFormationsData(formazioni, giornateSet, squadreSet);
+        
+        messageBox(`Formazioni caricate da Excel!\n\n✅ Giornata ${giornata}\n✅ ${squadreSet.size} squadre\n✅ ${formazioni.length} giocatori\n✅ ${bonuses.length} bonus (Mod.difesa + Altri bonus)`);
+        
+        // Reset UI dopo 2 secondi
+        setTimeout(() => {
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Carica Formazioni da Excel';
+            if (progressContainer) progressContainer.classList.add('hidden');
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Errore durante il caricamento delle formazioni da Excel:', error);
+        messageBox('Errore durante il caricamento: ' + error.message);
+        uploadButton.disabled = false;
+        uploadButton.textContent = 'Carica Formazioni da Excel';
+        if (progressContainer) progressContainer.classList.add('hidden');
+    }
+};
+
 /**
  * Riferimento alla collection Firestore per le formazioni
  */
@@ -1102,3 +2428,19 @@ window.triggerStatsFileInput = triggerStatsFileInput;
 window.handleStatsFileSelect = handleStatsFileSelect;
 window.confirmStatsUpload = confirmStatsUpload;
 window.processStatsFile = processStatsFile;
+window.triggerStatsXlsxFileInput = triggerStatsXlsxFileInput;
+window.handleStatsXlsxFileSelect = handleStatsXlsxFileSelect;
+window.confirmStatsXlsxUpload = confirmStatsXlsxUpload;
+window.processStatsXlsxFile = processStatsXlsxFile;
+window.triggerCalendarXlsxFileInput = triggerCalendarXlsxFileInput;
+window.handleCalendarXlsxFileSelect = handleCalendarXlsxFileSelect;
+window.confirmCalendarXlsxUpload = confirmCalendarXlsxUpload;
+window.processCalendarXlsxFile = processCalendarXlsxFile;
+window.triggerSquadsXlsxFileInput = triggerSquadsXlsxFileInput;
+window.handleSquadsXlsxFileSelect = handleSquadsXlsxFileSelect;
+window.confirmSquadsXlsxUpload = confirmSquadsXlsxUpload;
+window.processSquadsXlsxFile = processSquadsXlsxFile;
+window.triggerFormationsXlsxFileInput = triggerFormationsXlsxFileInput;
+window.handleFormationsXlsxFileSelect = handleFormationsXlsxFileSelect;
+window.confirmFormationsXlsxUpload = confirmFormationsXlsxUpload;
+window.processFormationsXlsxFile = processFormationsXlsxFile;

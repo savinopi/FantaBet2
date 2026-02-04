@@ -219,7 +219,8 @@ const renderTeamBonusSection = async (giornata, squadra) => {
         
         snapshot.forEach(doc => {
             const data = doc.data();
-            if (data.bonus && data.bonus.nome && data.bonus.valore > 0) {
+            // Accetta anche bonus negativi (valore !== 0)
+            if (data.bonus && data.bonus.nome && data.bonus.valore !== 0) {
                 bonusList.push(data.bonus);
             }
         });
@@ -233,6 +234,7 @@ const renderTeamBonusSection = async (giornata, squadra) => {
         
         bonusList.forEach(bonus => {
             const bonusType = bonus.nome.toLowerCase();
+            const isNegative = bonus.valore < 0;
             let icon = '';
             let bgColor = 'bg-yellow-600/30';
             
@@ -242,12 +244,24 @@ const renderTeamBonusSection = async (giornata, squadra) => {
             } else if (bonusType.includes('difesa')) {
                 icon = '🛡️';
                 bgColor = 'bg-blue-600/30 text-blue-300';
+            } else if (bonusType.includes('altri')) {
+                // "Altri bonus" - può essere positivo o negativo
+                if (isNegative) {
+                    icon = '✗';
+                    bgColor = 'bg-red-600/30 text-red-300';
+                } else {
+                    icon = '✓';
+                    bgColor = 'bg-green-600/30 text-green-300';
+                }
             }
             
+            // Mostra + solo se positivo, altrimenti il - è già nel valore
+            const valueDisplay = bonus.valore > 0 ? `+${bonus.valore}` : bonus.valore;
+
             html += `
                 <div class="flex items-center justify-between text-sm mb-2">
                     <span class="text-gray-300">${bonus.nome}</span>
-                    <span class="${bgColor} px-2 py-1 rounded">${icon} +${bonus.valore}</span>
+                    <span class="${bgColor} px-2 py-1 rounded">${icon} ${valueDisplay}</span>
                 </div>
             `;
         });
