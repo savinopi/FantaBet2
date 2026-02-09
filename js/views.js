@@ -196,7 +196,7 @@ const handleViewEnter = async (view) => {
             const drawAudio = document.getElementById('draw-theme-audio');
             if (drawAudio) {
                 drawAudio.currentTime = 0;
-                drawAudio.play().catch(err => console.log('Autoplay bloccato dal browser:', err));
+                drawAudio.play().catch(err => {});
             }
             break;
             

@@ -436,8 +436,6 @@ export const loadUserBonuses = async () => {
     
     if (!container) return;
     
-    console.log('[DEBUG BONUS] Profilo utente:', currentUserProfile);
-    
     // Verifica che l'utente abbia una squadra assegnata
     if (!currentUserProfile || !currentUserProfile.fantaSquad) {
         container.innerHTML = `

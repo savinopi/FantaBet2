@@ -38,7 +38,6 @@ export const loadAllFormations = async (forceReload = false) => {
         const snapshot = await getDocs(getFormationsCollectionRef());
         formationsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         lastLoadTimestamp = Date.now();
-        console.log(`Caricate ${formationsCache.length} formazioni per statistiche allenatore`);
         return formationsCache;
     } catch (error) {
         console.error('Errore caricamento formazioni:', error);
@@ -148,8 +147,6 @@ const calculateOptimalFormation = (players, deployedResult) => {
         
         const totalPoints = optimalPlayers.reduce((sum, p) => sum + p.fantavoto, 0);
         const formationStr = `${deployedRoles.D}-${deployedRoles.C}-${deployedRoles.A}`;
-        
-        console.log(`📊 Formazione ottimale vincolata (${deployedCount} giocatori): ${formationStr} → ${totalPoints} pts`);
         
         return {
             formation: formationStr,

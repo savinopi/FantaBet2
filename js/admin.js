@@ -403,8 +403,6 @@ export const saveAllSchedules = async () => {
         const activeRadio = document.querySelector('input[name="active-giornata"]:checked');
         const selectedActiveGiornata = activeRadio ? parseInt(activeRadio.value) : null;
         
-        console.log('[DEBUG saveAllSchedules] Giornata attiva selezionata:', selectedActiveGiornata);
-        
         // PRIMA: Resetta isActive su TUTTE le giornate
         for (let g = 1; g <= 36; g++) {
             const isActive = (selectedActiveGiornata === g);

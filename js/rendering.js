@@ -46,10 +46,8 @@ export const createSectionHeader = (title, colorClass) => {
 export const formatDateItalian = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString + 'T00:00:00');
-    console.log(`[DEBUG formatDateItalian] Input: "${dateString}" → Date obj: ${date} → isValid: ${!isNaN(date)}`);
     const options = { day: '2-digit', month: 'short', year: 'numeric' };
     const formatted = date.toLocaleDateString('it-IT', options);
-    console.log(`[DEBUG formatDateItalian] Output: "${formatted}"`);
     return formatted;
 };
 
@@ -109,7 +107,6 @@ export const renderHistoricResults = (results, giornateData = {}) => {
 
         // Ottieni la data della giornata da giornateData se disponibile
         const giornataDate = giornateData[giornata];
-        console.log(`[DEBUG renderHistoricResults] Giornata ${giornata}: giornataDate="${giornataDate}"`);
 
         // Raggruppa per data all'interno della giornata
         const matchesByDate = matches.reduce((acc, match) => {
@@ -1420,16 +1417,12 @@ function normalizeName(name) {
 
 export async function renderTeamOfTheSeason() {
     try {
-        console.log('🏆 Inizio caricamento Team of the Season...');
-        
         // Carica giocatori e loro statistiche usando i reference helper
         const playersRef = getPlayersCollectionRef();
         const statsRef = getPlayerStatsCollectionRef();
         
         const playersSnapshot = await getDocs(playersRef);
         const statsSnapshot = await getDocs(statsRef);
-        
-        console.log(`📊 Giocatori trovati: ${playersSnapshot.docs.length}, Statistiche: ${statsSnapshot.docs.length}`);
         
         // Crea map per statistiche
         const statsMap = new Map();
@@ -1525,7 +1518,6 @@ function renderTeamOfSeasonField(formation) {
     
     // Portiere
     const goalkeeperContainer = document.getElementById('team-season-goalkeeper');
-    console.log(`🥅 Portiere container trovato:`, goalkeeperContainer ? 'SÌ' : 'NO', `| Giocatori: ${formation['P'].length}`);
     if (goalkeeperContainer) {
         goalkeeperContainer.innerHTML = formation['P'].map(player => createPlayerCard(player)).join('');
     }

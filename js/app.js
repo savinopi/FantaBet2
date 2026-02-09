@@ -590,15 +590,12 @@ const setupUserProfileListener = async (uid) => {
     
     try {
         const userDocRef = doc(getUsersCollectionRef(), uid);
-        console.log('[DEBUG LISTENER] Impostazione listener profilo per uid:', uid);
         
         // STEP 1: VERIFICA PRIMA SE IL DOCUMENTO ESISTE
         const docSnap = await getDoc(userDocRef);
-        console.log('[DEBUG LISTENER] getDoc risultato - exists:', docSnap.exists(), '| data:', docSnap.data());
         
         if (!docSnap.exists()) {
             // STEP 2: SE NON ESISTE, CREALO PRIMA DI IMPOSTARE IL LISTENER
-            console.log('[DEBUG LISTENER] Documento non esiste, creazione documento di default...');
             
             const isDefaultAdmin = ADMIN_USER_IDS.includes(uid);
             const defaultUserData = {
@@ -609,7 +606,6 @@ const setupUserProfileListener = async (uid) => {
                 createdAt: new Date().toISOString()
             };
             
-            console.log('[DEBUG LISTENER] Creazione documento con:', defaultUserData);
             await setDoc(userDocRef, defaultUserData);
         }
         
@@ -654,18 +650,16 @@ const setupUserProfileListener = async (uid) => {
                     renderProfileArea();
                 }
             } else {
-                console.warn('[DEBUG LISTENER] Documento utente non trovato per UID:', uid);
                 setCurrentUserProfile(null);
             }
         }, (error) => {
-            console.error('[DEBUG LISTENER] Errore onSnapshot:', error);
+            console.error('Errore onSnapshot profilo utente:', error);
         });
         
         addUnsubscribe(unsubscribe);
-        console.log('[DEBUG LISTENER] Listener registrato e aggiunto alla lista unsubscribe');
         
     } catch (error) {
-        console.error('[DEBUG LISTENER] Errore setup profilo utente:', error);
+        console.error('Errore setup profilo utente:', error);
         messageBox("Errore nella configurazione del profilo utente. Contatta l'amministratore.");
     }
 };
@@ -675,8 +669,6 @@ const setupUserProfileListener = async (uid) => {
 // ===================================
 
 const setupListeners = () => {
-    console.log('Inizializzazione listeners...');
-    
     // Prima rimuovi eventuali listener esistenti
     removeAllListeners();
     
@@ -704,10 +696,8 @@ const setupListeners = () => {
                     if (schedule && schedule.date) {
                         const giornataKey = String(schedule.giornata);
                         giornateData[giornataKey] = schedule.date;
-                        console.log(`[DEBUG Schedule] Giornata ${giornataKey}: ${schedule.date}`);
                     }
                 }
-                console.log('[DEBUG] giornateData caricato:', giornateData);
                 // Salva giornateData globalmente per accesso da altri componenti
                 window.giornateData = giornateData;
             } catch (error) {
@@ -746,10 +736,6 @@ const setupListeners = () => {
                 const activeGiornata = await loadActiveGiornata();
                 const lastCompletedGiornata = determineLastCompletedGiornata();
                 let newNextGiornata = activeGiornata || (lastCompletedGiornata + 1);
-                
-                console.log('[DEBUG SCOMMESSE] activeGiornata:', activeGiornata, 
-                    '| lastCompletedGiornata:', lastCompletedGiornata, 
-                    '| newNextGiornata:', newNextGiornata);
                 
                 // Filtra partite aperte
                 let openMatchesData = matches.filter(m => {
@@ -935,7 +921,6 @@ const checkPendingBonusRequests = async () => {
 };
 
 const loadInitialData = async () => {
-    console.log('Caricamento dati iniziali admin...');
     // Implementazione esistente
 };
 
@@ -1030,7 +1015,6 @@ const loadActiveGiornata = async () => {
         for (const docSnap of scheduleSnapshot.docs) {
             const data = docSnap.data();
             if (data.isActive) {
-                console.log('[DEBUG loadActiveGiornata] Giornata attiva trovata:', data.giornata);
                 return parseInt(data.giornata, 10);
             }
         }
@@ -1051,7 +1035,6 @@ const loadAllSchedules = async () => {
             const data = docSnap.data();
             scheduleCache[data.giornata] = data;
         });
-        console.log('Schedule cache caricata:', scheduleCache);
         return scheduleCache;
     } catch (error) {
         console.error('Errore caricamento schedules:', error);
@@ -1144,7 +1127,6 @@ const updateMatchToCloseSelect = (matches) => {
     
     // Trova l'ultima giornata con risultati (usa anche i risultati storici)
     const lastCompletedGiornata = determineLastCompletedGiornata();
-    console.log('updateMatchToCloseSelect -> ultima completata:', lastCompletedGiornata, 'prossima:', lastCompletedGiornata + 1);
 
         // Mostra solo le partite della prossima giornata da completare
         const openMatches = matches
@@ -1152,15 +1134,6 @@ const updateMatchToCloseSelect = (matches) => {
                 const giornata = parseInt(m.giornata || '0', 10);
                 const isNextGiornata = giornata === (lastCompletedGiornata + 1);
                 const isOpen = m.status === 'open' || !m.status;
-                
-                console.log('Valutazione partita per visualizzazione:', {
-                    partita: `${m.homeTeam} vs ${m.awayTeam}`,
-                    giornata,
-                    status: m.status,
-                    isNextGiornata,
-                    isOpen,
-                    include: isOpen && isNextGiornata
-                });
                 
                 return isOpen && isNextGiornata;
             })
@@ -1280,7 +1253,6 @@ const renderAdminUsersList = async (users) => {
 
 setViewCallbacks({
     onBettingView: async () => {
-        console.log('Passaggio a sezione scommesse...');
         if (state.allMatches.length > 0) {
             const activeGiornata = await loadActiveGiornata();
             if (activeGiornata) {
@@ -1430,10 +1402,12 @@ window._authGetters = {
  * Esportata per essere chiamata dall'HTML
  */
 export const initializeApp = async () => {
-    console.log('FANTABet - Inizializzazione...');
-    
     // Esponi Firebase Firestore a livello globale per script inline
     window.db = db;
+    
+    // Esponi funzioni di autenticazione per l'HTML inline SUBITO
+    window.handleLoginRegister = handleLoginRegister;
+    window.handleLogout = handleLogout;
     
     // Setup dipendenze per admin.js (le funzioni sono definite in questo modulo)
     setAdminDependencies({
@@ -1444,9 +1418,11 @@ export const initializeApp = async () => {
     
     setupFirebase();
     
-    // Carica gli orari delle giornate e imposta la progressione
-    await loadAllSchedules();
-    renderGiornateProgress();
+    // NON carico i dati qui - verrà fatto solo dopo l'autenticazione
+    // I dati saranno caricati in loadAppData() che verrà chiamato dopo il login
+    
+    // Esponi loadAppData a livello globale per poterla chiamare da auth.js
+    window.loadAppData = loadAppData;
     
     // Listener per resize finestra - aggiorna classifica per layout responsivo
     let resizeTimeout;
@@ -1459,6 +1435,25 @@ export const initializeApp = async () => {
             }
         }, 250); // Debounce 250ms
     });
+};
+
+/**
+ * Carica i dati dell'app dopo l'autenticazione
+ * Viene chiamato automaticamente quando l'utente si autentica
+ */
+export const loadAppData = async () => {
+    try {
+        // Carica gli orari delle giornate e imposta la progressione
+        await loadAllSchedules();
+        renderGiornateProgress();
+        
+        // Aggiorna il pulsante profilo con l'email dell'utente
+        if (window.updateProfileButton && currentUserProfile?.email) {
+            window.updateProfileButton(currentUserProfile.email);
+        }
+    } catch (error) {
+        messageBox('Errore nel caricamento dei dati. Ricarica la pagina.');
+    }
 };
 
 // ===================================
@@ -1489,7 +1484,6 @@ window.clearHistoricResults = async () => {
         
         hideProgressBar();
         messageBox(`Cancellati ${deletedCount} risultati storici.`);
-        console.log(`Cancellati ${deletedCount} risultati storici`);
         
         // Ricarica i dati
         scheduleCache = null;
@@ -1527,7 +1521,6 @@ window.clearOpenMatches = async () => {
         
         hideProgressBar();
         messageBox(`Cancellate ${deletedCount} partite aperte.`);
-        console.log(`Cancellate ${deletedCount} partite aperte`);
         
         // Ricarica i dati
         scheduleCache = null;
@@ -1564,7 +1557,6 @@ window.resetUserCredits = async () => {
         
         hideProgressBar();
         messageBox(`Crediti reimpostati per ${updatedCount} utenti.`);
-        console.log(`Crediti reimpostati per ${updatedCount} utenti`);
         
     } catch (error) {
         console.error("Errore reset crediti:", error);
@@ -1615,7 +1607,6 @@ window.clearHistoricResultsAndTeams = async (confirmed) => {
                 const progress = 10 + (currentIndex / totalDocs) * 85;
                 updateProgressBar(progress, `Cancellazione ${collectionRef.id}...`);
             }
-            console.log(`Cancellati ${collectionDeleted} documenti dalla collezione: ${collectionRef.id}`);
         }
         
         updateProgressBar(100, 'Completato!');
@@ -1732,7 +1723,6 @@ window.loadGiornataAttachments = async (giornata) => {
 window.downloadAttachment = (attachmentId, fileName) => {
     messageBox(`Download di ${fileName} in corso...`);
     // In una vera implementazione, qui scaricheresti il file da Firebase Storage
-    console.log('Download:', attachmentId, fileName);
 };
 
 window.deleteAttachment = async (attachmentId, fileName) => {

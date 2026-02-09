@@ -28,7 +28,8 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js";
 
 // ===================================
@@ -104,6 +105,7 @@ export {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
+    sendPasswordResetEmail,
     
     // Collection references
     getTeamsCollectionRef,

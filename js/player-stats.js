@@ -71,7 +71,6 @@ export const clearPlayerStats = async () => {
         
         hideProgressBar();
         messageBox(`Cancellate ${deletedCount} statistiche calciatori.`);
-        console.log(`Cancellate ${deletedCount} statistiche`);
         
         // Pulisci il container visualizzazione
         const summaryContainer = document.getElementById('stats-summary-container');
@@ -138,7 +137,6 @@ export const clearSquadsData = async () => {
         
         hideProgressBar();
         messageBox(`Cancellate ${deletedPlayers} calciatori e ${deletedSquads} squadre.`);
-        console.log(`Rose cancellate: ${deletedPlayers} calciatori, ${deletedSquads} squadre`);
         
         // Pulisci il container visualizzazione
         const container = document.getElementById('squads-data-container');
@@ -159,15 +157,10 @@ export const clearSquadsData = async () => {
  */
 export const loadPlayerStats = async () => {
     try {
-        console.log('[LoadPlayerStats] Avvio caricamento statistiche...');
-        
         const statsCollection = getPlayerStatsCollectionRef();
         const snapshot = await getDocs(statsCollection);
         
-        console.log('[LoadPlayerStats] Snapshot ricevuto, documenti:', snapshot.size);
-        
         if (snapshot.empty) {
-            console.warn('[LoadPlayerStats] Nessuna statistica trovata');
             document.getElementById('player-stats-table').innerHTML = '<tr><td colspan="8" class="text-center text-gray-500 py-8">Nessuna statistica caricata. Contatta l\'admin per il caricamento.</td></tr>';
             return;
         }
@@ -179,18 +172,8 @@ export const loadPlayerStats = async () => {
             allStats.push(data);
         });
         
-        console.log('[LoadPlayerStats] Statistiche caricate:', allStats.length);
-        console.log('[LoadPlayerStats] Primo elemento:', allStats[0]);
-        
         // Popola i filtri
         const squadFilter = document.getElementById('stats-squad-filter');
-        if (!squadFilter) {
-            console.error('[LoadPlayerStats] stats-squad-filter non trovato');
-            return;
-        }
-        
-        const uniqueSquads = [...new Set(allStats.map(s => s.fantaSquad))].sort();
-        console.log('[LoadPlayerStats] Squadre trovate:', uniqueSquads);
         
         squadFilter.innerHTML = '<option value="all">Tutte le rose</option>';
         uniqueSquads.forEach(squad => {
@@ -202,8 +185,6 @@ export const loadPlayerStats = async () => {
         currentFilteredStats = allStats;
         window.currentPlayerStats = allStats;
         window.currentFilteredStats = allStats;
-        
-        console.log('[LoadPlayerStats] Chiamata sortPlayerStats con colonna:', currentSortColumn);
         
         // Mostra tutte le statistiche con ordinamento default
         sortPlayerStats(currentSortColumn);
@@ -218,18 +199,12 @@ export const loadPlayerStats = async () => {
  * Renderizza la vista delle statistiche calciatori
  */
 const renderPlayerStatsView = (stats) => {
-    console.log('[RenderPlayerStatsView] Inizio rendering, stats:', stats.length);
-    
     const tableBody = document.getElementById('player-stats-table');
     if (!tableBody) {
-        console.error('[ERROR] player-stats-table non trovato');
         return;
     }
     
-    console.log('[RenderPlayerStatsView] Elemento trovato, contenuto vuoto');
-    
     if (stats.length === 0) {
-        console.warn('[RenderPlayerStatsView] Nessun giocatore da mostrare');
         tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500 py-4">Nessun giocatore trovato con i filtri selezionati.</td></tr>';
         return;
     }
@@ -284,14 +259,12 @@ const renderPlayerStatsView = (stats) => {
     });
     
     tableBody.innerHTML = html;
-    console.log('[RenderPlayerStatsView] Rendering completato, righe inserite:', stats.length);
 };
 
 /**
  * Ordina le statistiche dei calciatori
  */
 export const sortPlayerStats = (column) => {
-    console.log('[SortPlayerStats] Ordinamento richiesto per colonna:', column);
     
     if (!currentFilteredStats || currentFilteredStats.length === 0) {
         console.warn('[SortPlayerStats] Nessun dato da ordinare');
@@ -308,7 +281,6 @@ export const sortPlayerStats = (column) => {
         currentSortDirection = textColumns.includes(column) ? 'asc' : 'desc';
     }
     
-    console.log('[SortPlayerStats] Ordinamento: colonna=' + column + ' direzione=' + currentSortDirection);
     
     // Ordina i dati
     const sorted = [...currentFilteredStats].sort((a, b) => {
@@ -344,7 +316,6 @@ export const sortPlayerStats = (column) => {
  * Aggiorna i visual indicators di ordinamento nei header
  */
 const updateSortIndicators = (column) => {
-    console.log('[UpdateSortIndicators] Aggiornamento indicatori per colonna:', column);
     
     const headers = document.querySelectorAll('thead th');
     if (!headers || headers.length === 0) {
@@ -371,7 +342,6 @@ const updateSortIndicators = (column) => {
                 header.textContent += ' ↓';
             }
             header.classList.add('text-blue-400');
-            console.log('[UpdateSortIndicators] Header "' + colName + '" marcato come ordinato');
         } else {
             // Rimuovi frecce dalle altre colonne
             header.textContent = header.textContent.replace(/↑|↓/g, '').trim();
@@ -384,7 +354,6 @@ const updateSortIndicators = (column) => {
  * Filtra le statistiche dei calciatori
  */
 export const filterPlayerStats = () => {
-    console.log('[FilterPlayerStats] Inizio applicazione filtri...');
     
     if (!currentPlayerStats || currentPlayerStats.length === 0) {
         console.warn('[FilterPlayerStats] Nessun dato per filtrare');
@@ -394,7 +363,6 @@ export const filterPlayerStats = () => {
     const squadFilter = document.getElementById('stats-squad-filter').value;
     const roleFilter = document.getElementById('stats-role-filter').value;
     
-    console.log('[FilterPlayerStats] Filtri applicati: squadra=' + squadFilter + ' ruolo=' + roleFilter);
     
     let filtered = [...currentPlayerStats];
     
@@ -406,8 +374,6 @@ export const filterPlayerStats = () => {
     if (roleFilter !== 'all') {
         filtered = filtered.filter(s => s.role === roleFilter);
     }
-    
-    console.log('[FilterPlayerStats] Risultati dopo filtri:', filtered.length);
     
     // Salva i dati filtrati e applica l'ordinamento corrente
     currentFilteredStats = filtered;
@@ -453,8 +419,6 @@ export const loadPlayerLeaderboards = async () => {
             ? Math.max(...allResults.map(r => parseInt(r.giornata) || 0))
             : 0;
         const totalGiornate = lastFantaGiornata + 2; // Converti giornata fanta in giornata Serie A
-        
-        console.log('Ultima giornata Fanta:', lastFantaGiornata, '→ Giornate Serie A:', totalGiornate);
         
         // Top 3 Marcatori (gol segnati)
         const topScorers = allStats
@@ -607,9 +571,6 @@ export const loadSquadsData = async () => {
         // Salva le statistiche nello stato globale per renderSquadsView
         setPlayerStatsData(allStats);
         
-        console.log(`[Rose] IDs caricati dalle statistiche: ${playerIdMap.size} giocatori`);
-        console.log(`[Rose] Statistiche salvate nello stato globale: ${allStats.length} giocatori`);
-        
         // Carica i giocatori dalle Rose
         const snapshot = await getDocs(playersCollection);
         
@@ -638,13 +599,10 @@ export const loadSquadsData = async () => {
             squadsMap.get(player.squadName).push(player);
         });
         
-        console.log(`[Rose] Giocatori arricchiti con playerId: ${enrichedCount}/${snapshot.size}`);
-        
         // Debug: Mostra il primo giocatore per controllare se ha playerId
         if (squadsMap.size > 0) {
             const firstPlayers = squadsMap.values().next().value;
             if (firstPlayers && firstPlayers.length > 0) {
-                console.log('[DEBUG Rose] Primo giocatore caricato:', firstPlayers[0]);
             }
         }
         
@@ -675,27 +633,18 @@ const renderSquadsView = (squadsMap) => {
     const container = document.getElementById('squads-grid');
     if (!container) return;
     
-    console.log('[DEBUG renderSquadsView] Numero squadre:', squadsMap.size);
     if (squadsMap.size > 0) {
         const firstPlayers = squadsMap.values().next().value;
-        console.log('[DEBUG renderSquadsView] Primo giocatore della prima squadra:', firstPlayers[0]);
     }
     
     // Importa le statistiche globali
     let allPlayerStats = getPlayerStatsData() || [];
-    console.log('[DEBUG renderSquadsView] Statistiche recuperate dallo stato globale:', allPlayerStats.length);
     
     // Crea una map nome -> statistiche per lookup veloce
     const statsMap = new Map();
     for (const stat of allPlayerStats) {
         const normalizedName = (stat.playerName || '').trim().toLowerCase();
         statsMap.set(normalizedName, stat);
-    }
-    
-    console.log('[DEBUG renderSquadsView] Statistiche caricate in map:', statsMap.size);
-    if (statsMap.size > 0) {
-        const firstStat = statsMap.values().next().value;
-        console.log('[DEBUG renderSquadsView] Prima statistica:', firstStat);
     }
     
     let html = '';

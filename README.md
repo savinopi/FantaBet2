@@ -1,6 +1,31 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.11**
+**Versione: 3.13.0**
+
+## 🆕 Changelog v3.13.0
+
+### Sistema di Autenticazione
+- **Login/Signup professionale**: Pagina con design purple/indigo, form arrotondati, animazioni slide-in
+- **Validazione Password stringente**: 8+ caratteri, maiuscola, minuscola, numero, carattere speciale
+- **Checklist criteri in tempo reale**: Indicatori ✓/✗ colorati, pulsante disabilitato finché non soddisfatti
+- **Recupero Password**: Modal con invio email via Firebase `sendPasswordResetEmail`
+- **Messaggi errore user-friendly**: Errori Firebase tradotti in italiano con context (login vs signup)
+
+### Banner FANTABET & Menu Profilo
+- **Header fisso globale**: Gradiente purple/indigo, responsive (sottile su desktop)
+- **Pulsante profilo**: Cerchio con iniziale email, menu dropdown con email + logout
+- **Z-index corretto**: Menu profilo fuori dall'header per evitare problemi di stacking context
+
+### Pulizia Codice & Sicurezza
+- **Rimossi 50+ console.log** da tutti i moduli JS (app, auth, player-stats, views, bonus, admin, etc.)
+- **API Key Firebase aggiornata**: Nuova chiave in firebase-config.js
+- **Caricamento dati differito**: loadAppData() solo dopo autenticazione
+
+### Layout Desktop
+- **Header responsive**: Più sottile su desktop con classi `lg:py-2 lg:text-2xl`
+- **Sidebar riposizionata**: top da 1rem a 3.5rem per stare sotto l'header
+
+---
 
 ## 🆕 Changelog v3.11
 

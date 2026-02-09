@@ -202,5 +202,3 @@ export const analyzeFormationsData = async () => {
 // Esponi globalmente per accesso dalla console
 window.analyzeFormationsData = analyzeFormationsData;
 window.analyzeSquadra = analyzeSquadra;
-
-console.log('✅ Debug script caricato. Usa: analyzeFormationsData() o analyzeSquadra("LIBERTAS")');

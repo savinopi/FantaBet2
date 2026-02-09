@@ -2,6 +2,65 @@
 
 Tutti i cambiamenti notevoli di questo progetto saranno documentati in questo file.
 
+## [3.13.0] - 2026-02-08
+
+### Aggiunte
+- **Sistema di Autenticazione completo**: Nuova pagina di login/signup professionale
+  - Design con gradiente purple/indigo, form arrotondati, animazioni slide-in/slide-out
+  - Toggle visibilità password con icona occhio
+  - Supporto Firebase Auth: `signInWithEmailAndPassword`, `createUserWithEmailAndPassword`
+  - Pagina di recupero password con `sendPasswordResetEmail`
+  
+- **Validazione Password stringente (Signup)**: Criteri di sicurezza avanzati
+  - Minimo 8 caratteri, almeno 1 maiuscola, 1 minuscola, 1 numero, 1 carattere speciale
+  - Checklist visiva in tempo reale (✓/✗ colorati verde/rosso)
+  - Pulsante "Crea Account" disabilitato finché tutti i criteri non sono soddisfatti
+  - Verifica conferma password con feedback immediato
+
+- **Banner FANTABET fisso**: Header globale sempre visibile
+  - Gradiente purple → indigo con titolo FANTABET cliccabile (reload pagina)
+  - Pulsante profilo circolare con iniziale email dell'utente
+  - Design responsive: più sottile su desktop (`lg:py-2, lg:text-2xl`)
+
+- **Menu Profilo**: Dropdown con email utente e logout
+  - Elemento posizionato fuori dall'header (z-index: 9999) per evitare problemi di stacking context
+  - Email troncata con `truncate`, label "Account", icona logout SVG
+  - Chiusura automatica al click outside
+
+### Correzioni
+- **Messaggi di errore user-friendly**: Errori Firebase tradotti in italiano
+  - Messaggi specifici per login (credenziali errate, troppi tentativi)
+  - Messaggi specifici per signup (email già registrata, password debole)
+  - Evidenziazione campi con bordo rosso in caso di errore
+
+- **SyntaxError player-stats.js**: Risolto `Unexpected token 'export'` alla riga 265
+  - Causato da `return;` mancante nel blocco `if (!tableBody)` rimosso durante debug cleanup
+
+- **Menu profilo invisibile**: Il menu era dentro l'header con z-40 (stacking context limitato)
+  - Spostato come elemento indipendente `fixed` fuori dall'header
+
+- **Layout desktop**: Header troppo grande e sidebar sovrapposta
+  - Header più sottile su desktop con classi `lg:py-2 lg:text-2xl lg:max-w-full`
+  - Sidebar `top` cambiato da `1rem` a `3.5rem` per posizionarsi sotto l'header
+
+### Pulizia Codice
+- **Rimozione debug logs**: Eliminati 50+ `console.log` da tutti i moduli JS
+  - `app.js`: Rimossi log [DEBUG LISTENER], Inizializzazione, scheduling, scommesse
+  - `player-stats.js`: Rimossi 20+ log [LoadPlayerStats], [RenderPlayerStatsView], [SortPlayerStats], [DEBUG Rose]
+  - `auth.js`: Rimossi log autenticazione, salvataggio documento, verifica admin
+  - `views.js`: Rimosso log autoplay audio
+  - `bonus.js`: Rimosso log [DEBUG BONUS] profilo utente
+  - `admin.js`: Rimosso log [DEBUG saveAllSchedules]
+  - `coach-stats.js`: Rimossi 2 log formazioni e ottimale
+  - `rendering.js`: Rimossi log [DEBUG formatDateItalian], renderHistoricResults, Team of the Season
+  - `debug-formations.js`: Rimosso log "Debug script caricato"
+
+### Sicurezza
+- **API Key Firebase aggiornata**: Nuova chiave in `firebase-config.js` e `debug-formations.html`
+- **Caricamento dati differito**: `loadAppData()` ora viene chiamato solo dopo autenticazione riuscita
+
+---
+
 ## [3.12.2] - 2026-02-07
 
 ### Correzioni

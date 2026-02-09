@@ -11,6 +11,7 @@ import {
     createUserWithEmailAndPassword,
     signOut, 
     onAuthStateChanged,
+    sendPasswordResetEmail,
     doc,
     getDoc,
     setDoc,
@@ -50,13 +51,11 @@ export const addUnsubscribe = (unsubscribe) => {
  * Rimuove tutti i listener attivi
  */
 export const removeAllListeners = () => {
-    console.log('Removing all listeners:', activeUnsubscribes.length);
     while (activeUnsubscribes.length > 0) {
         const unsubscribe = activeUnsubscribes.pop();
         try {
             unsubscribe();
         } catch (e) {
-            console.error('Error unsubscribing:', e);
         }
     }
 };
@@ -70,8 +69,13 @@ export const removeAllListeners = () => {
  * @param {boolean} isLogin - true per login, false per registrazione
  */
 export const handleLoginRegister = async (isLogin) => {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
+    // Seleziona gli IDs corretti in base alla modalità
+    const emailId = isLogin ? 'auth-email' : 'signup-email';
+    const passwordId = isLogin ? 'auth-password' : 'signup-password';
+    const passwordConfirmId = 'signup-password-confirm';
+    
+    const email = document.getElementById(emailId).value;
+    const password = document.getElementById(passwordId).value;
     
     if (!email || !password) {
         messageBox("Inserisci email e password.");
@@ -80,8 +84,22 @@ export const handleLoginRegister = async (isLogin) => {
     
     // Validazione client-side per registrazione
     if (!isLogin) {
-        if (password.length < 6) {
-            messageBox("❌ Password troppo corta!\n\nLa password deve contenere almeno 6 caratteri.\n\nRiprova con una password più lunga.");
+        const passwordConfirm = document.getElementById(passwordConfirmId).value;
+        
+        // Validazione criteri password stringenti
+        const hasLength = password.length >= 8;
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasLowercase = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        
+        if (!hasLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+            messageBox("❌ Password non valida!\n\nLa password deve contenere:\n✓ Almeno 8 caratteri\n✓ Almeno una lettera maiuscola\n✓ Almeno una lettera minuscola\n✓ Almeno un numero\n✓ Almeno un carattere speciale (!@#$%^&*(),.?\":{}|<>)");
+            return;
+        }
+        
+        if (password !== passwordConfirm) {
+            messageBox("❌ Le password non coincidono!\n\nAssicurati che le due password siano identiche.");
             return;
         }
     }
@@ -95,7 +113,6 @@ export const handleLoginRegister = async (isLogin) => {
         }
         
         const user = userCredential.user;
-        console.log("User authenticated:", user.uid);
         
         // Crea o aggiorna sempre il documento utente
         const userDocRef = doc(getUsersCollectionRef(), user.uid);
@@ -103,7 +120,6 @@ export const handleLoginRegister = async (isLogin) => {
         try {
             // Prima verifica se è un admin predefinito
             const isDefaultAdmin = ADMIN_USER_IDS.includes(user.uid);
-            console.log("Is default admin:", isDefaultAdmin);
             
             // Ottieni il documento esistente se presente
             const userDoc = await getDoc(userDocRef);
@@ -122,31 +138,57 @@ export const handleLoginRegister = async (isLogin) => {
             
             // Salva o aggiorna il documento
             await setDoc(userDocRef, userData);
-            console.log("User document saved:", userData);
             
             messageBox(isLogin ? 
                 "Accesso riuscito!" : 
                 "Registrazione completata! Profilo utente creato.");
+            
+            // Carica i dati dell'app dopo l'autenticazione riuscita
+            if (window.loadAppData) {
+                await window.loadAppData();
+            }
                 
         } catch (dbError) {
-            console.error("Errore salvataggio documento utente:", dbError);
             messageBox("Errore nel salvataggio del profilo. Contatta l'admin.");
         }
     } catch (error) {
-        console.error("Errore Autenticazione:", error);
-        let errorMessage = "Errore di autenticazione.";
+        let errorMessage = "Errore di autenticazione.";;
 
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-            errorMessage = "Credenziali non valide. Controlla email e password. Hai provato prima a **Registrarti**?";
-        } else if (error.code === 'auth/email-already-in-use') {
-            errorMessage = "Questa email è già registrata. Prova ad accedere.";
-        } else if (error.code === 'auth/weak-password') {
-            errorMessage = "La password deve essere di almeno 6 caratteri.";
-        } else if (error.code === 'auth/invalid-email') {
-            errorMessage = "Formato email non valido.";
+        if (isLogin) {
+            // Errori specifici per il LOGIN
+            if (error.code === 'auth/invalid-login-credentials' || error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                errorMessage = "❌ Email o password non corrente!\n\nVerifica di aver inserito correttamente:\n✓ L'indirizzo email\n✓ La password (maiuscole/minuscole importano)\n\nNon hai un account? Clicca su 'Crea Account'.";
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = "❌ Formato email non valido!\n\nInserisci un indirizzo email corretto (es: user@example.com)";
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = "❌ Troppi tentativi di accesso!\n\nPer motivi di sicurezza, riprova tra qualche minuto.";
+            }
+            
+            // Mostra errore nel form
+            if (window.showLoginError) {
+                window.showLoginError(errorMessage);
+            } else {
+                messageBox(errorMessage);
+            }
+        } else {
+            // Errori specifici per la REGISTRAZIONE
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = "❌ Questa email è già registrata!\n\nSe è il tuo account, clicca su 'Accedi'.\nAltrimenti usa un'altra email.";
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = "❌ Formato email non valido!\n\nInserisci un indirizzo email corretto (es: user@example.com)";
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = "❌ La password non rispetta i criteri di sicurezza!\n\nLa password deve contenere:\n✓ Almeno 8 caratteri\n✓ Almeno una lettera maiuscola\n✓ Almeno una lettera minuscola\n✓ Almeno un numero\n✓ Almeno un carattere speciale (!@#$%^&*(),.?\":{}|<>)";
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = "❌ Troppi tentativi!\n\nPer motivi di sicurezza, riprova tra qualche minuto.";
+            }
+            
+            // Mostra errore nel form
+            if (window.showSignupError) {
+                window.showSignupError(errorMessage);
+            } else {
+                messageBox(errorMessage);
+            }
         }
-        
-        messageBox(errorMessage);
     }
 };
 
@@ -163,9 +205,7 @@ export const handleLogout = async () => {
         removeAllListeners();
         // Poi esegui il logout
         await signOut(auth);
-        console.log('Logout completato e listener rimossi');
     } catch (error) {
-        console.error("Errore Logout:", error);
         messageBox("Errore durante il logout.");
     }
 };
@@ -210,7 +250,6 @@ export const checkAdminStatus = async () => {
         }
         updateUserInfoDisplay();
     } catch (error) {
-        console.error('Errore verifica admin:', error);
         isUserAdmin = false;
         updateAdminUI(false);
     }
@@ -308,9 +347,7 @@ export const adjustCredits = async (amount) => {
             await updateDoc(userRef, {
                 credits: userCredits
             });
-            console.log('Crediti aggiornati su Firestore:', userCredits);
         } catch (error) {
-            console.error('Errore aggiornamento crediti su Firestore:', error);
         }
     }
 };
@@ -385,7 +422,6 @@ export const saveUserProfile = async () => {
         // Aggiorna il profilo locale
         currentUserProfile.displayName = newDisplayName;
     } catch (error) {
-        console.error("Errore salvataggio profilo:", error);
         messageBox("Errore durante il salvataggio del profilo: " + error.message);
     }
 };
@@ -464,6 +500,27 @@ export const setupAuthStateListener = (callbacks) => {
 };
 
 // ===================================
+// RESET PASSWORD
+// ===================================
+
+/**
+ * Invia email per reset password
+ * @param {string} email - Email dell'utente
+ */
+export const resetPassword = async (email) => {
+    if (!email || typeof email !== 'string') {
+        throw new Error('Email non valida');
+    }
+    
+    try {
+        await sendPasswordResetEmail(auth, email);
+        return { success: true };
+    } catch (error) {
+        throw error;
+    }
+};
+
+// ===================================
 // EXPORT PER COMPATIBILITÀ WINDOW
 // ===================================
 
@@ -472,3 +529,4 @@ window.handleLoginRegister = handleLoginRegister;
 window.handleLogout = handleLogout;
 window.saveUserProfile = saveUserProfile;
 window.showMatchStatsModal = showMatchStatsModal;
+window.resetPassword = resetPassword;

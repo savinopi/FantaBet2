@@ -1048,7 +1048,7 @@ div[class*="grid"] img {
 
 #desktop-sidebar {
     position: fixed;
-    top: 1rem;
+    top: 3.5rem;
     left: 1rem;
     width: 80px;
     background-color: rgba(15, 23, 42, 0.95);
@@ -1264,4 +1264,131 @@ div[class*="grid"] img {
 .giornata-box:hover::after {
     opacity: 1;
 }
+
+/* ===================================
+   SEZIONE LOGIN - STILI PERSONALIZZATI
+   =================================== */
+
+/* Input del form login */
+.auth-input {
+    font-size: 16px; /* Previene zoom automatico su iOS */
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.auth-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1), 0 0 10px rgba(147, 51, 234, 0.3);
+    transform: translateY(-2px);
+}
+
+.auth-input::placeholder {
+    color: #a0aec0;
+}
+
+/* Animazione di transizione tra form login e signup */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+}
+
+/* Classe per mostrare il form con animazione */
+.form-show {
+    display: block !important;
+    animation: slideInLeft 0.3s ease-out;
+}
+
+/* Classe per nascondere il form con animazione */
+.form-hide {
+    display: none !important;
+    animation: slideOutRight 0.3s ease-out;
+}
+
+/* Responsive adjustments per il banner */
+@media (max-width: 640px) {
+    #login-container {
+        min-height: 100vh;
+    }
+}
+
+/* Assicura che gli occhi dell'icona di password visibility siano visibili */
+.password-eye {
+    stroke-width: 2px;
+}
+
+/* Smooth scrolling per il form */
+#login-form-container,
+#signup-form-container {
+    transition: all 0.3s ease;
+}
+
+/* Stilizzazione delle card per il form */
+#login-form-container,
+#signup-form-container {
+    background-color: rgba(15, 23, 42, 0.98);
+}
+
+/* Override per i colori dei placeholder */
+input::placeholder {
+    color: #999 !important;
+}
+
+/* Focus visibile per l'accessibilità */
+button:focus-visible {
+    outline: 2px solid #a855f7;
+    outline-offset: 2px;
+}
+
+input:focus-visible {
+    outline: 2px solid #a855f7;
+    outline-offset: 2px;
+}
+
+/* ===================================
+   MODAL RECUPERO PASSWORD - ANIMAZIONI
+   =================================== */
+
+@keyframes scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+}
+
+/* Stile per la modal di recupero password */
+#forgot-password-modal {
+    backdrop-filter: blur(4px);
+}
+
+#forgot-password-modal > div {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 

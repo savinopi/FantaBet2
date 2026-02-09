@@ -51,6 +51,391 @@
 </head>
 <body class="min-h-screen">
 
+    <!-- ========================================
+         BANNER FANTABET FISSO (sempre visibile)
+         ======================================== -->
+    <div id="global-header" class="fixed top-0 left-0 right-0 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-2 shadow-lg z-40" style="padding-top: max(0.75rem, calc(var(--safe-area-inset-top) + 0.25rem));">
+        <div class="flex items-center justify-between max-w-md lg:max-w-full mx-auto">
+            <h1 class="text-2xl sm:text-3xl lg:text-2xl font-bold text-white cursor-pointer" onclick="window.location.reload();">FANTABET</h1>
+            <div class="relative">
+                <button id="profile-button" class="w-10 h-10 sm:w-12 sm:h-12 lg:w-9 lg:h-9 rounded-full bg-white text-purple-700 font-bold text-lg sm:text-xl lg:text-base flex items-center justify-center hover:bg-purple-100 transition" onclick="window.toggleProfileMenu(event)">A</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu profilo FUORI dal header per evitare problemi di z-index -->
+    <div id="profile-menu" class="hidden fixed top-14 lg:top-11 right-4 w-52 bg-gray-900 rounded-xl shadow-2xl border-2 border-purple-500 overflow-hidden" style="z-index: 9999;">
+        <div class="p-4 border-b border-gray-700 bg-gray-800/50">
+            <p class="text-xs text-gray-400 mb-1">Account</p>
+            <p id="profile-email" class="text-sm text-white font-medium truncate"></p>
+        </div>
+        <button onclick="handleLogout()" class="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/20 font-semibold transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            Logout
+        </button>
+    </div>
+
+    <!-- ========================================
+         SCRIPT INLINE PER FUNZIONI LOGIN
+         Definito prima del DOM per essere disponibile negli onclick
+         ======================================== -->
+    <script>
+        // Gestione menu profilo
+        window.toggleProfileMenu = (e) => {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('profile-menu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        };
+
+        window.closeProfileMenu = () => {
+            const menu = document.getElementById('profile-menu');
+            if (menu) {
+                menu.classList.add('hidden');
+            }
+        };
+
+        window.updateProfileButton = (email) => {
+            if (!email) return;
+            
+            const button = document.getElementById('profile-button');
+            const emailDisplay = document.getElementById('profile-email');
+            
+            // Estrai prima lettera dell'email (maiuscola)
+            const firstLetter = email.charAt(0).toUpperCase();
+            
+            if (button) button.textContent = firstLetter;
+            if (emailDisplay) emailDisplay.textContent = email;
+        };
+
+        window.handleLogout = async () => {
+            if (window.handleLogoutFunc) {
+                await window.handleLogoutFunc();
+            }
+        };
+
+        // Chiudi menu quando clicchi fuori
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profile-menu');
+            const button = document.getElementById('profile-button');
+            if (menu && button) {
+                // Chiudi se il click è fuori dal menu E fuori dal pulsante
+                if (!menu.contains(e.target) && !button.contains(e.target)) {
+                    window.closeProfileMenu();
+                }
+            }
+        });
+
+        // Funzioni per la sezione login - devono essere disponibili subito
+        window.showForgotPasswordModal = () => {
+            const modal = document.getElementById('forgot-password-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                const emailField = document.getElementById('forgot-password-email');
+                if (emailField) emailField.value = '';
+            }
+        };
+
+        window.closeForgotPasswordModal = () => {
+            const modal = document.getElementById('forgot-password-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        };
+
+        window.sendPasswordReset = async () => {
+            const emailField = document.getElementById('forgot-password-email');
+            const email = emailField?.value?.trim();
+            
+            if (!email) {
+                alert('❌ Inserisci un indirizzo email valido.');
+                return;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('❌ Formato email non valido.');
+                return;
+            }
+            
+            try {
+                if (window.resetPassword) {
+                    await window.resetPassword(email);
+                    window.closeForgotPasswordModal();
+                    alert(`✅ Email inviata!\n\nSe l'indirizzo "${email}" è registrato nel nostro sistema, riceverai un link per resettare la password entro pochi minuti.\n\nControlla la tua inbox e la cartella spam.`);
+                } else {
+                    alert('Errore: Sistema di autenticazione non ancora inizializzato. Ricarica la pagina.');
+                }
+            } catch (error) {
+                let errorMessage = 'Errore nell\'invio dell\'email di reset.';
+                
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = '❌ Nessun account trovato con questa email.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = '❌ Formato email non valido.';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = '❌ Troppi tentativi. Riprova più tardi.';
+                }
+                
+                alert(errorMessage);
+            }
+        };
+
+        window.switchAuthMode = (mode) => {
+            const loginContainer = document.getElementById('login-form-container');
+            const signupContainer = document.getElementById('signup-form-container');
+            
+            if (mode === 'login') {
+                if (loginContainer) {
+                    loginContainer.classList.remove('hidden');
+                    loginContainer.classList.add('form-show');
+                    loginContainer.classList.remove('form-hide');
+                }
+                if (signupContainer) {
+                    signupContainer.classList.add('hidden');
+                    signupContainer.classList.add('form-hide');
+                    signupContainer.classList.remove('form-show');
+                }
+                
+                const emailField = document.getElementById('auth-email');
+                const passwordField = document.getElementById('auth-password');
+                if (emailField) emailField.value = '';
+                if (passwordField) {
+                    passwordField.value = '';
+                    passwordField.type = 'password';
+                }
+                
+                const loginIcon = document.querySelector('#login-form-container .password-eye');
+                if (loginIcon) loginIcon.style.opacity = '0.6';
+            } else if (mode === 'signup') {
+                if (loginContainer) {
+                    loginContainer.classList.add('hidden');
+                    loginContainer.classList.add('form-hide');
+                    loginContainer.classList.remove('form-show');
+                }
+                if (signupContainer) {
+                    signupContainer.classList.remove('hidden');
+                    signupContainer.classList.add('form-show');
+                    signupContainer.classList.remove('form-hide');
+                }
+                
+                const emailField = document.getElementById('signup-email');
+                const passwordField = document.getElementById('signup-password');
+                const confirmField = document.getElementById('signup-password-confirm');
+                
+                if (emailField) emailField.value = '';
+                if (passwordField) {
+                    passwordField.value = '';
+                    passwordField.type = 'password';
+                }
+                if (confirmField) {
+                    confirmField.value = '';
+                    confirmField.type = 'password';
+                }
+                
+                const signupIcons = document.querySelectorAll('#signup-form-container .password-eye');
+                signupIcons.forEach(icon => icon.style.opacity = '0.6');
+            }
+        };
+
+        window.togglePasswordVisibility = (inputId) => {
+            const input = document.getElementById(inputId);
+            const button = input?.parentElement.querySelector('button');
+            
+            if (!input || !button) return;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                const svg = button.querySelector('svg');
+                if (svg) svg.style.opacity = '1';
+            } else {
+                input.type = 'password';
+                const svg = button.querySelector('svg');
+                if (svg) svg.style.opacity = '0.6';
+            }
+        };
+
+        window.showComingSoon = () => {
+            alert('🚀 Login con Google sarà disponibile presto!\n\nPer ora, usa le credenziali email e password.');
+        };
+
+        // ========================================
+        // GESTIONE ERRORI FORM
+        // ========================================
+        
+        /**
+         * Mostra messaggio di errore nel form di login
+         */
+        window.showLoginError = (message) => {
+            const errorDiv = document.getElementById('login-error');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+                
+                // Evidenzia i campi con bordo rosso
+                const emailField = document.getElementById('auth-email');
+                const passwordField = document.getElementById('auth-password');
+                if (emailField) emailField.classList.add('border-2', 'border-red-500');
+                if (passwordField) passwordField.classList.add('border-2', 'border-red-500');
+            }
+        };
+        
+        /**
+         * Nasconde messaggio di errore nel form di login
+         */
+        window.hideLoginError = () => {
+            const errorDiv = document.getElementById('login-error');
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+                errorDiv.textContent = '';
+                
+                // Rimuove il bordo rosso dai campi
+                const emailField = document.getElementById('auth-email');
+                const passwordField = document.getElementById('auth-password');
+                if (emailField) emailField.classList.remove('border-2', 'border-red-500');
+                if (passwordField) passwordField.classList.remove('border-2', 'border-red-500');
+            }
+        };
+        
+        /**
+         * Mostra messaggio di errore nel form di signup
+         */
+        window.showSignupError = (message) => {
+            const errorDiv = document.getElementById('signup-error');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+                
+                // Evidenzia i campi con bordo rosso
+                const emailField = document.getElementById('signup-email');
+                const passwordField = document.getElementById('signup-password');
+                const confirmField = document.getElementById('signup-password-confirm');
+                if (emailField) emailField.classList.add('border-2', 'border-red-500');
+                if (passwordField) passwordField.classList.add('border-2', 'border-red-500');
+                if (confirmField) confirmField.classList.add('border-2', 'border-red-500');
+            }
+        };
+        
+        /**
+         * Nasconde messaggio di errore nel form di signup
+         */
+        window.hideSignupError = () => {
+            const errorDiv = document.getElementById('signup-error');
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+                errorDiv.textContent = '';
+                
+                // Rimuove il bordo rosso dai campi
+                const emailField = document.getElementById('signup-email');
+                const passwordField = document.getElementById('signup-password');
+                const confirmField = document.getElementById('signup-password-confirm');
+                if (emailField) emailField.classList.remove('border-2', 'border-red-500');
+                if (passwordField) passwordField.classList.remove('border-2', 'border-red-500');
+                if (confirmField) confirmField.classList.remove('border-2', 'border-red-500');
+            }
+        };
+
+        // ========================================
+        // VALIDAZIONE PASSWORD SIGNUP
+        // ========================================
+        
+        /**
+         * Valida i criteri della password
+         */
+        window.validateSignupPassword = () => {
+            const passwordField = document.getElementById('signup-password');
+            const password = passwordField?.value || '';
+            
+            // Criteri della password
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            
+            // Aggiorna UI criteri
+            updateCriteria('criteria-length', hasLength);
+            updateCriteria('criteria-uppercase', hasUppercase);
+            updateCriteria('criteria-lowercase', hasLowercase);
+            updateCriteria('criteria-number', hasNumber);
+            updateCriteria('criteria-special', hasSpecial);
+            
+            // Verifica se tutti i criteri sono soddisfatti
+            const allCriteriaValid = hasLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
+            
+            // Abilita/disabilita il pulsante se anche le password coincidono
+            updateSubmitButton();
+            
+            return allCriteriaValid;
+        };
+
+        /**
+         * Valida che le password coincidono
+         */
+        window.validatePasswordMatch = () => {
+            const passwordField = document.getElementById('signup-password');
+            const confirmField = document.getElementById('signup-password-confirm');
+            const password = passwordField?.value || '';
+            const confirm = confirmField?.value || '';
+            
+            const matchDiv = document.getElementById('password-match');
+            const matchSpan = document.getElementById('criteria-match');
+            
+            if (confirm.length > 0) {
+                matchDiv?.classList.remove('hidden');
+                const matches = password === confirm;
+                updateCriteria('criteria-match', matches);
+            } else {
+                matchDiv?.classList.add('hidden');
+            }
+            
+            updateSubmitButton();
+        };
+
+        /**
+         * Aggiorna lo stato di un singolo criterio
+         */
+        function updateCriteria(elementId, isValid) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                if (isValid) {
+                    element.textContent = '✓';
+                    element.className = 'text-green-400';
+                } else {
+                    element.textContent = '✗';
+                    element.className = 'text-red-400';
+                }
+            }
+        }
+
+        /**
+         * Abilita/disabilita il pulsante di submit
+         */
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('signup-submit-btn');
+            if (!submitBtn) return;
+            
+            const passwordField = document.getElementById('signup-password');
+            const confirmField = document.getElementById('signup-password-confirm');
+            const password = passwordField?.value || '';
+            const confirm = confirmField?.value || '';
+            
+            // Verifica tutti i criteri
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            const passwordsMatch = password === confirm && password.length > 0;
+            
+            const allValid = hasLength && hasUppercase && hasLowercase && hasNumber && hasSpecial && passwordsMatch;
+            
+            submitBtn.disabled = !allValid;
+        }
+    </script>
     
     <!-- ========================================
          OVERLAY DI LOADING
@@ -277,41 +662,250 @@
     </audio>
 
     <!-- ========================================
+         MODAL RECUPERO PASSWORD
+         ======================================== -->
+    <div id="forgot-password-modal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4" onclick="if (event.target === this) closeForgotPasswordModal();">
+        <div class="bg-gray-900 rounded-3xl border-4 border-purple-500 p-8 w-full max-w-md shadow-2xl animate-scale-in" onclick="event.stopPropagation();">
+            <!-- Contenuto Modal -->
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-white mb-2">Recupera Password</h2>
+                <p class="text-gray-400 text-sm">Inserisci la tua email per ricevere il link di reset</p>
+            </div>
+            
+            <!-- Form -->
+            <div class="space-y-4">
+                <input 
+                    type="email" 
+                    id="forgot-password-email" 
+                    placeholder="Email" 
+                    class="auth-input w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                    onkeypress="if(event.key === 'Enter') sendPasswordReset();"
+                    required>
+                
+                <!-- Pulsante Recupera Password -->
+                <button 
+                    onclick="sendPasswordReset()"
+                    class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition transform hover:scale-105 active:scale-95 min-h-12 shadow-lg">
+                    Recupera Password
+                </button>
+                
+                <!-- Link Ritorna al Login -->
+                <div class="text-center mt-4">
+                    <a href="#" onclick="event.preventDefault(); closeForgotPasswordModal();" class="text-purple-400 hover:text-purple-300 font-bold transition">
+                        Ritorna al Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
          CONTENITORE PRINCIPALE
          ======================================== -->
     <div class="w-full px-3 sm:px-6 md:px-8" style="padding-top: max(0.25rem, calc(var(--safe-area-inset-top) + 0.5rem));">
         
         <!-- ========================================
-             SEZIONE LOGIN
+             SEZIONE LOGIN - BANNER SUPERIORE E FORM
              ======================================== -->
-        <div id="login-container" class="max-w-md mx-auto card p-6 sm:p-8 hidden" style="margin-top: max(1rem, calc(var(--safe-area-inset-top) + 0.5rem));">
-            <h2 id="auth-title" class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-center">Accedi a FantaBet</h2>
-            <form id="auth-form" onsubmit="event.preventDefault(); handleLoginRegister(true);" class="space-y-4">
-                <div class="flex flex-col">
-                    <label for="auth-email" class="text-sm sm:text-base text-gray-400 mb-1">Email</label>
-                    <input type="email" id="auth-email" placeholder="Inserisci la tua email" required>
+        <div id="login-container" class="hidden flex flex-col min-h-screen" style="padding-top: max(3.5rem, calc(var(--safe-area-inset-top) + 3.5rem));">
+            
+            <!-- CONTENITORE FORM -->
+            <div class="flex-1 flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8">
+                <div class="w-full max-w-sm">
+                    
+                    <!-- ============================
+                         FORM LOGIN
+                         ============================ -->
+                    <div id="login-form-container" class="card p-6 sm:p-8 rounded-3xl border-2 border-purple-500 shadow-2xl">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2 text-white">Accedi</h2>
+                        <p class="text-center text-gray-400 text-sm mb-6">Al tuo account FantaBet</p>
+                        
+                        <form id="auth-form" onsubmit="event.preventDefault(); hideLoginError(); handleLoginRegister(true);" class="space-y-4">
+                            <!-- Email Input -->
+                            <div class="flex flex-col">
+                                <input 
+                                    type="email" 
+                                    id="auth-email" 
+                                    placeholder="Email" 
+                                    class="auth-input w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                                    oninput="hideLoginError()"
+                                    required>
+                            </div>
+                            
+                            <!-- Password Input con Toggle Visibility -->
+                            <div class="flex flex-col">
+                                <div class="relative">
+                                    <input 
+                                        type="password" 
+                                        id="auth-password" 
+                                        placeholder="Password" 
+                                        class="auth-input w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition pr-12"
+                                        autocomplete="current-password"
+                                        oninput="hideLoginError()"
+                                        required>
+                                    <button 
+                                        type="button" 
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition"
+                                        onclick="togglePasswordVisibility('auth-password')">
+                                        <svg class="w-5 h-5 password-eye" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <!-- Messaggio di Errore Login -->
+                        <div id="login-error" class="hidden mt-4 p-4 bg-red-500/20 border-l-4 border-red-500 rounded text-red-300 text-sm font-medium"></div>
+                        
+                        <!-- Pulsante Accedi -->
+                        <button 
+                            type="submit" 
+                            form="auth-form" 
+                            class="w-full mt-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition transform hover:scale-105 active:scale-95 min-h-12 shadow-lg">
+                            Accedi
+                        </button>
+                        
+                        <!-- Link Password Dimenticata -->
+                        <div class="text-center mt-4">
+                            <a href="#" onclick="event.preventDefault(); showForgotPasswordModal();" class="text-purple-400 hover:text-purple-300 text-sm font-medium transition">
+                                Ho dimenticato la password
+                            </a>
+                        </div>
+                        
+                        <!-- Link Crea Account -->
+                        <p class="text-center mt-6 text-gray-400">
+                            Non hai un account? 
+                            <a href="#" onclick="event.preventDefault(); switchAuthMode('signup');" class="text-purple-400 hover:text-purple-300 font-bold transition">
+                                Crea Account
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <!-- ============================
+                         FORM SIGNUP
+                         ============================ -->
+                    <div id="signup-form-container" class="hidden card p-6 sm:p-8 rounded-3xl border-2 border-purple-500 shadow-2xl">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2 text-white">Crea Account</h2>
+                        <p class="text-center text-gray-400 text-sm mb-6">Unisciti a FantaBet</p>
+                        
+                        <form id="signup-form" onsubmit="event.preventDefault(); hideSignupError(); handleLoginRegister(false);" class="space-y-4">
+                            <!-- Email Input -->
+                            <div class="flex flex-col">
+                                <input 
+                                    type="email" 
+                                    id="signup-email" 
+                                    placeholder="Email" 
+                                    class="auth-input w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                                    oninput="hideSignupError()"
+                                    required>
+                            </div>
+                            
+                            <!-- Password Input con Toggle Visibility -->
+                            <div class="flex flex-col">
+                                <div class="relative">
+                                    <input 
+                                        type="password" 
+                                        id="signup-password" 
+                                        placeholder="Password" 
+                                        class="auth-input w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition pr-12"
+                                        oninput="hideSignupError(); validateSignupPassword()"
+                                        required>
+                                    <button 
+                                        type="button" 
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition"
+                                        onclick="togglePasswordVisibility('signup-password')">
+                                        <svg class="w-5 h-5 password-eye" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Confirm Password Input con Toggle Visibility -->
+                            <div class="flex flex-col">
+                                <div class="relative">
+                                    <input 
+                                        type="password" 
+                                        id="signup-password-confirm" 
+                                        placeholder="Conferma Password" 
+                                        class="auth-input w-full px-4 py-3 rounded-2xl bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition pr-12"
+                                        oninput="hideSignupError(); validatePasswordMatch()"
+                                        onchange="validateSignupPassword(); validatePasswordMatch();"
+                                        oninput="validatePasswordMatch();"
+                                        required>
+                                    <button 
+                                        type="button" 
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition"
+                                        onclick="togglePasswordVisibility('signup-password-confirm')">
+                                        <svg class="w-5 h-5 password-eye" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Indicatore Criteri Password -->
+                            <div id="password-criteria" class="bg-gray-800/50 rounded-lg p-4 space-y-2 text-sm">
+                                <div class="font-semibold text-gray-300 mb-2">Criteri Password:</div>
+                                <div class="flex items-center gap-2">
+                                    <span id="criteria-length" class="text-red-400">✗</span>
+                                    <span class="text-gray-300">Almeno 8 caratteri</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="criteria-uppercase" class="text-red-400">✗</span>
+                                    <span class="text-gray-300">Almeno una MAIUSCOLA</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="criteria-lowercase" class="text-red-400">✗</span>
+                                    <span class="text-gray-300">Almeno una minuscola</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="criteria-number" class="text-red-400">✗</span>
+                                    <span class="text-gray-300">Almeno un numero (0-9)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="criteria-special" class="text-red-400">✗</span>
+                                    <span class="text-gray-300">Almeno un carattere speciale (!@#$%)</span>
+                                </div>
+                                <div id="password-match" class="hidden flex items-center gap-2 mt-2 pt-2 border-t border-gray-600">
+                                    <span id="criteria-match" class="text-red-400">✗</span>
+                                    <span class="text-gray-300">Le password coincidono</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Pulsante Crea Account -->
+                            <button 
+                                type="submit" 
+                                id="signup-submit-btn"
+                                disabled
+                                class="w-full mt-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-700 hover:to-indigo-700 transition transform hover:scale-105 active:scale-95 min-h-12 shadow-lg">
+                                Crea Account
+                            </button>
+                        </form>
+                        
+                        <!-- Messaggio di Errore Signup -->
+                        <div id="signup-error" class="hidden mt-4 p-4 bg-red-500/20 border-l-4 border-red-500 rounded text-red-300 text-sm font-medium"></div>
+                        
+                        <!-- Link Login -->
+                        <p class="text-center mt-6 text-gray-400">
+                            Sei già registrato? 
+                            <a href="#" onclick="event.preventDefault(); switchAuthMode('login');" class="text-purple-400 hover:text-purple-300 font-bold transition">
+                                Login
+                            </a>
+                        </p>
+                    </div>
                 </div>
-                <div class="flex flex-col">
-                    <label for="auth-password" class="text-sm sm:text-base text-gray-400 mb-1">Password</label>
-                    <input type="password" id="auth-password" placeholder="Inserisci la tua password" autocomplete="current-password" required>
-                    <p class="text-xs text-gray-500 mt-1">
-                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                        </svg>
-                        La password deve contenere almeno 6 caratteri
-                    </p>
-                </div>
-            </form>
-            <div class="mt-6 flex flex-col space-y-3">
-                <button type="submit" form="auth-form" class="btn-primary w-full" id="login-button-ui">Accedi</button>
-                <button onclick="handleLoginRegister(false)" class="btn-secondary w-full" id="register-button-ui">Registrati</button>
             </div>
         </div>
         
         <!-- ========================================
              APP PRINCIPALE (dopo login)
              ======================================== -->
-        <div id="main-app-container" class="hidden">
+        <div id="main-app-container" class="hidden" style="padding-top: max(3.5rem, calc(var(--safe-area-inset-top) + 3.5rem));">
             
             <!-- ========================================
                  TOP NAVIGATION BAR (Mobile/Tablet)
@@ -349,7 +943,7 @@
             <div id="app-content-area">
                 
                 <!-- HOME DASHBOARD -->
-                <div id="home-container" class="max-w-4xl mx-auto px-4 sm:px-6" style="padding-top: max(0.5rem, var(--safe-area-inset-top));">
+                <div id="home-container" class="max-w-4xl mx-auto px-4 sm:px-6">
                     <div>
                     <!-- Header Home -->
                     <div class="pb-4 mb-4 border-b border-gray-700">
@@ -2034,16 +2628,12 @@
             
             // Carica i dati per il tab selezionato
             if (tab === 'users' && window.loadUsersForAdmin) {
-                console.log('📌 Tab Utenti cliccato - Caricando utenti...');
                 window.loadUsersForAdmin();
             } else if (tab === 'schedules' && window.loadSchedulesForAdmin) {
-                console.log('📌 Tab Orari cliccato - Caricando orari...');
                 window.loadSchedulesForAdmin();
             } else if (tab === 'bets' && window.renderAdminBetsFilter) {
-                console.log('📌 Tab Scommesse cliccato - Caricando scommesse...');
                 window.renderAdminBetsFilter('all');
             } else if (tab === 'bonus' && window.loadBonusData) {
-                console.log('📌 Tab Bonus cliccato - Caricando bonus...');
                 window.loadBonusData();
             }
         }
@@ -2152,7 +2742,6 @@
                     updateTopNavTitle('Settings');
                     // Carica gli utenti subito quando apri Settings
                     if (window.loadUsersForAdmin) {
-                        console.log('⚙️ Settings tab aperto - Caricando utenti...');
                         window.loadUsersForAdmin();
                     }
                     break;
@@ -2318,7 +2907,6 @@
                     try {
                         await window.loadSquadsData();
                     } catch (e) {
-                        console.error('Errore caricamento rose:', e);
                     }
                 }
             }
@@ -2368,7 +2956,6 @@
                     try {
                         await window.loadPlayerStats();
                     } catch (e) {
-                        console.error('Errore caricamento statistiche:', e);
                     }
                 }
             }
@@ -2431,7 +3018,6 @@
                                 }
                             }, 100);
                         } catch (e) {
-                            console.error('Errore creazione grafico inline:', e);
                         }
                     } else {
                         // Prova a chiamare renderStandingsTrend con il canvas inline
@@ -3532,7 +4118,7 @@
     <!-- Footer versione -->
     <footer class="bg-gray-900 border-t border-gray-800 py-4 mt-8 mb-20 sm:mb-0">
         <div class="text-center text-gray-500 text-sm">
-            <p>FantaBet v3.12.2</p>
+            <p>FantaBet v3.13.0</p>
             <p class="text-xs text-gray-600" id="update-timestamp"></p>
         </div>
     </footer>
@@ -3559,9 +4145,7 @@
                 });
                 
                 document.getElementById('update-timestamp').textContent = `Ultimo commit: ${dateString}`;
-                console.log('✅ Ultimo commit caricato:', dateString);
             } catch (error) {
-                console.error('Errore caricamento commit GitHub:', error);
                 document.getElementById('update-timestamp').textContent = 'Versione non disponibile';
             }
         }
@@ -3675,7 +4259,6 @@
                     messageBox('File caricato con successo! ✓');
                 }, 500);
             } catch (error) {
-                console.error('Errore caricamento file:', error);
                 messageBox('Errore nel caricamento del file');
                 progressDiv.classList.add('hidden');
             }
@@ -3762,15 +4345,12 @@
                 html += '</div>';
                 attachmentsList.innerHTML = html;
             } catch (error) {
-                console.error('Errore caricamento allegati:', error);
                 document.getElementById('giornata-attachments-list').innerHTML = '<p class="text-red-400 text-center py-4">Errore nel caricamento dei file</p>';
             }
         };
 
         window.downloadAttachment = (attachmentId, fileName) => {
             messageBox(`Download di ${fileName} in corso...`);
-            // In una vera implementazione, qui scaricheresti il file da Firebase Storage
-            console.log('Download:', attachmentId, fileName);
         };
 
         window.deleteAttachment = async (attachmentId, fileName) => {
@@ -3781,7 +4361,6 @@
                 messageBox('File eliminato con successo ✓');
                 await loadGiornataAttachments(currentGiornataForAttachments);
             } catch (error) {
-                console.error('Errore eliminazione file:', error);
                 messageBox('Errore nell\'eliminazione del file');
             }
         };
@@ -3789,3 +4368,4 @@
 
 </body>
 </html>
+
