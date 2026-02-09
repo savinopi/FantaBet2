@@ -36,7 +36,7 @@ import {
 // ===================================
 
 const firebaseConfig = {
-    apiKey: "AIzaSyD9FAyUKCHkP9v_gEWnh4kLDFjyKMKWw74",
+    apiKey: "AIzaSyBRm8jnmciZ_9LUyhL0AWWTt-jVRMy1efQ",
     authDomain: "fantabet-op.firebaseapp.com",
     projectId: "fantabet-op",
     storageBucket: "fantabet-op.firebasestorage.app",
