@@ -1,8 +1,35 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.13.0**
+**Versione: 3.14.0**
 
-## 🆕 Changelog v3.13.0
+## 🆕 Changelog v3.14.0
+
+### Sistema Upload Voti Fantacalcio
+- **Caricamento Excel Voti**: Nuovo modulo per caricare voti XLSX "Statistico" con schema giornata-squadra
+  - Parsing dinamico delle intestazioni (Cod, Ruolo, Nome, Voto, Gf, Gs, Rp, Rs, Rf, Au, Amm, Esp, Ass)
+  - Supporto per giornate multiple in coda con progress bar
+  - Cancellazione automatica voti precedenti per evitare duplicati
+
+### Statistiche Calciatori Singoli
+- **Nuova sezione "Statistiche Calciatori"**: Analisi dettagliata per giocatore
+  - Indice dinamico con ricerca autocomplete e normalizzazione diacritici
+  - Statistics cards: Partite, Gol, Assist, Ammonizioni, Espulsioni, Media voto
+  - Grafico Chart.js: Voto vs FantaVoto per ogni giornata
+  - Tabella per-giornata con breakdown stats, bonus, voto costruito
+  - Formula FantaVoto visibile e calcolata in tempo reale
+  - Debug functions per troubleshooting
+
+### Correzioni Parser Voti (🎯 Critical Bug Fix)
+- **BUG CRITICO**: Parser saltava il primo giocatore di ogni squadra (portieri)
+  - Cause: Flag `inHeaderRow` usato con `continue` scappava la prima riga di dati
+  - Soluzione: Resettare il flag senza saltare la riga
+  - Risultato: Passato da 314 voti (P=0) a 334 voti (P=20, tutti portieri)
+- **Migliorato test numerico**: Controlla nella colonna corretta anziché sempre A
+- **Debug logging**: Mostra distribuzione P/D/C/A durante parsing
+
+---
+
+## Changelog v3.13.0
 
 ### Sistema di Autenticazione
 - **Login/Signup professionale**: Pagina con design purple/indigo, form arrotondati, animazioni slide-in

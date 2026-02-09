@@ -25,7 +25,8 @@ import {
     getMatchesCollectionRef,
     getPlayersCollectionRef,
     getPlayerStatsCollectionRef,
-    getFormationsCollectionRef
+    getFormationsCollectionRef,
+    getVotesCollectionRef
 } from './firebase-config.js';
 import { messageBox, showProgressBar, hideProgressBar, updateProgress } from './utils.js';
 import { calculateOdds } from './bets.js';
@@ -909,6 +910,110 @@ export const clearAllFormations = async () => {
     }
 };
 
+// ==================== VOTI FANTACALCIO ====================
+
+/**
+ * Cancella i voti di una giornata specifica
+ */
+export const clearVotesForGiornata = async () => {
+    const isUserAdmin = getIsUserAdmin();
+    if (!isUserAdmin) return;
+    
+    const giornataInput = prompt('Inserisci il numero della giornata di cui cancellare i voti (es. 1):', '');
+    if (giornataInput === null || giornataInput.trim() === '') {
+        return;
+    }
+    
+    const giornata = parseInt(giornataInput);
+    if (isNaN(giornata) || giornata < 1 || giornata > 38) {
+        messageBox('Errore: Inserisci un numero di giornata valido (1-38)');
+        return;
+    }
+    
+    if (!confirm(`Sei sicuro di voler cancellare TUTTI i voti della giornata ${giornata}? Questa azione è irreversibile.`)) {
+        return;
+    }
+    
+    showProgressBar(`Cancellazione Voti Giornata ${giornata}`);
+    
+    try {
+        const votesCollection = getVotesCollectionRef();
+        const q = query(votesCollection, where('giornata', '==', giornata));
+        const snapshot = await getDocs(q);
+        
+        const totalDocs = snapshot.docs.length;
+        if (totalDocs === 0) {
+            hideProgressBar();
+            messageBox(`Nessun voto trovato per la giornata ${giornata}.`);
+            return;
+        }
+        
+        let deletedCount = 0;
+        
+        for (const docSnapshot of snapshot.docs) {
+            await deleteDoc(docSnapshot.ref);
+            deletedCount++;
+            
+            const progress = (deletedCount / totalDocs) * 100;
+            updateProgress(progress, `Cancellazione in corso...`, deletedCount, totalDocs);
+        }
+        
+        hideProgressBar();
+        messageBox(`Cancellati ${deletedCount} voti della giornata ${giornata}.`);
+        console.log(`Cancellati ${deletedCount} voti della giornata ${giornata}`);
+        
+    } catch (error) {
+        console.error("Errore cancellazione voti:", error);
+        hideProgressBar();
+        messageBox(`Errore durante la cancellazione: ${error.message}`);
+    }
+};
+
+/**
+ * Cancella TUTTI i voti di tutte le giornate
+ */
+export const clearAllVotes = async () => {
+    const isUserAdmin = getIsUserAdmin();
+    if (!isUserAdmin) return;
+    
+    if (!confirm(`Sei sicuro di voler cancellare TUTTI i voti di tutte le giornate? Questa azione è irreversibile.`)) {
+        return;
+    }
+    
+    showProgressBar(`Cancellazione Tutti i Voti`);
+    
+    try {
+        const votesCollection = getVotesCollectionRef();
+        const snapshot = await getDocs(votesCollection);
+        
+        const totalDocs = snapshot.docs.length;
+        if (totalDocs === 0) {
+            hideProgressBar();
+            messageBox(`Nessun voto trovato nel database.`);
+            return;
+        }
+        
+        let deletedCount = 0;
+        
+        for (const docSnapshot of snapshot.docs) {
+            await deleteDoc(docSnapshot.ref);
+            deletedCount++;
+            
+            const progress = (deletedCount / totalDocs) * 100;
+            updateProgress(progress, `Cancellazione in corso...`, deletedCount, totalDocs);
+        }
+        
+        hideProgressBar();
+        messageBox(`Cancellati ${deletedCount} voti da tutte le giornate.`);
+        console.log(`Cancellati ${deletedCount} voti da tutte le giornate`);
+        
+    } catch (error) {
+        console.error("Errore cancellazione voti:", error);
+        hideProgressBar();
+        messageBox(`Errore durante la cancellazione: ${error.message}`);
+    }
+};
+
 /**
  * Reset crediti di tutti gli utenti a 100
  */
@@ -1383,6 +1488,8 @@ export const setupGlobalAdminFunctions = () => {
     window.clearAllTeams = clearAllTeams;
     window.clearSquadsData = clearSquadsData;
     window.clearPlayerStats = clearPlayerStats;
+    window.clearVotesForGiornata = clearVotesForGiornata;
+    window.clearAllVotes = clearAllVotes;
     
     // Funzioni gestione partite e risultati
     window.addHistoricResult = addHistoricResult;

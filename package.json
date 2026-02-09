@@ -1,7 +1,7 @@
 {
   "name": "fantabet",
-  "version": "3.13.0",
-  "description": "**Versione: 3.13.0** - FANTABet v3.13.0: Sistema Autenticazione, Profile Menu, Debug Cleanup, Desktop Layout",
+  "version": "3.14.0",
+  "description": "**Versione: 3.14.0** - FANTABet v3.14.0: Votes Upload System, Player Single Statistics, Parser Bug Fixes",
   "main": "index.js",
   "scripts": {
     "build:css": "tailwindcss -i css/input.css -o css/output.css",

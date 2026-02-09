@@ -2,6 +2,49 @@
 
 Tutti i cambiamenti notevoli di questo progetto saranno documentati in questo file.
 
+## [3.14.0] - 2026-02-09
+
+### Aggiunte
+- **Sistema Upload Voti Fantacalcio**: Modulo completo per caricare voti da Excel
+  - Caricamento file XLSX con parsing automatico foglio "Statistico"
+  - Supporto giornate multiple in coda con progress bar visuale
+  - Mapping dinamico colonne: Cod, Ruolo, Nome, Voto, Gf, Gs, Rp, Rs, Rf, Au, Amm, Esp, Ass
+  - Rilevamento automatico giornata da titolo, nome file, o prima riga
+  - Cancellazione voti precedenti per giornata prima dell'inserimento
+
+- **Sezione Statistiche Calciatori Singoli**: Analisi player-focused completa
+  - Indice dinamico dei giocatori con ricerca autocomplete normalizzi diacritici
+  - 6 Statistics Cards: Partite, Gol, Assist, Ammonizioni, Espulsioni, Media Voto
+  - Grafico interattivo Chart.js: linea doppia Voto vs FantaVoto per giornata
+  - Tabella per-giornata con: giornata, voto, gf, gs, assist, amm, legenda bonus, FantaVoto
+  - Formula FantaVoto visibile con componenti: Voto + (Gf×3) + (Rf×3) - (Gs×1) + (Ass×1) - (Amm×0.5) - (Esp×1) + (Rp×3) - (Au×1)
+  - Debug functions: `debugSearchPlayer(term)` e `debugPlayersByTeam(squadra)` per troubleshooting
+
+- **Logging Migliorato per Parsing Voti**:
+  - Mostra distribuzione ruoli (P/D/C/A) durante parsing
+  - Elenca primi portieri trovati per verifica rapida
+  - Traccia numero squadre rilevate e mapping intestazioni
+
+### Correzioni 🎯
+- **BUG CRITICO - Parser Saltava Portieri**: Flag `inHeaderRow` continuava senza processare prima riga
+  - Impatto: Prima parse = 314 voti (P=0), dopo = 334 voti (P=20)
+  - Causa: Codice resettava flag E saltava riga con `continue;` 
+  - Soluzione: Resettare senza saltare il giocatore
+
+- **Test Numerico Codice Corretto**: Ora controlla colonna mappata `colMap.cod` anziché sempre A
+  - Preveniva malidentificazione di giocatori come squadre
+
+- **Legenda Campi Voti**: Corretta definizione Rf = "Rigori segnati"
+
+- **Search Diacritici**: Added `normalizeName()` function usando NFD decomposition
+  - Risolve ricerca di giocatori con accenti (Carnesecchi, etc)
+
+### Miglioramenti UX
+- **Error Handling Player Search**: Messaggio dettagliato quando giocatore non trovato
+- **Admin Dashboard**: Nuove funzioni `clearVotesForGiornata()` e `clearAllVotes()`
+
+---
+
 ## [3.13.0] - 2026-02-08
 
 ### Aggiunte

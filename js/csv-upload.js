@@ -22,7 +22,8 @@ import {
     getSquadsCollectionRef,
     getPlayerStatsCollectionRef,
     getTeamsCollectionRef,
-    getFormationsCollectionRef
+    getFormationsCollectionRef,
+    getVotesCollectionRef
 } from './firebase-config.js';
 import { messageBox, showProgressBar, hideProgressBar, updateProgressBar, updateProgress } from './utils.js';
 import { getIsUserAdmin } from './auth.js';
@@ -39,6 +40,10 @@ let selectedFormationsXlsxFile = null; // File XLSX formazioni
 // Coda file formazioni per upload multiplo
 let formationsXlsxQueue = [];
 let formationsQueueProcessing = false;
+
+// Coda file voti per upload multiplo
+let votesXlsxQueue = [];
+let votesQueueProcessing = false;
 
 // Dipendenze esterne da settare
 let renderHistoricResults = null;
@@ -2683,6 +2688,539 @@ export const processFormationsXlsxFile = async () => {
  */
 // Nota: getFormationsCollectionRef è già importato da firebase-config.js
 
+// ==================== VOTI FANTACALCIO DA EXCEL (XLSX) - UPLOAD MULTIPLO ====================
+
+/**
+ * Apre il dialog per selezionare i file Excel dei voti (multipli)
+ */
+export const triggerVotesXlsxFileInput = () => {
+    document.getElementById('votes-xlsx-file-input').click();
+};
+
+/**
+ * Aggiorna la UI della coda file voti
+ */
+const updateVotesQueueUI = () => {
+    const queueContainer = document.getElementById('votes-xlsx-queue-container');
+    const queueList = document.getElementById('votes-xlsx-queue-list');
+    const queueCount = document.getElementById('votes-xlsx-queue-count');
+    const uploadButton = document.getElementById('upload-votes-xlsx-button');
+    const clearButton = document.getElementById('clear-votes-queue-button');
+    
+    if (votesXlsxQueue.length === 0) {
+        queueContainer?.classList.add('hidden');
+        clearButton?.classList.add('hidden');
+        uploadButton.disabled = true;
+        uploadButton.classList.remove('btn-primary');
+        uploadButton.classList.add('btn-secondary');
+        return;
+    }
+    
+    queueContainer?.classList.remove('hidden');
+    clearButton?.classList.remove('hidden');
+    queueCount.textContent = votesXlsxQueue.length;
+    
+    // Genera lista file
+    queueList.innerHTML = votesXlsxQueue.map((file, index) => `
+        <li class="flex items-center justify-between gap-2 text-sm py-1 px-2 rounded ${file.status === 'completed' ? 'bg-green-900/30' : file.status === 'processing' ? 'bg-blue-900/30' : file.status === 'error' ? 'bg-red-900/30' : 'bg-gray-700/30'}">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+                <span class="flex-shrink-0">
+                    ${file.status === 'completed' ? '✅' : file.status === 'processing' ? '⏳' : file.status === 'error' ? '❌' : '📄'}
+                </span>
+                <span class="truncate ${file.status === 'completed' ? 'text-green-300' : file.status === 'error' ? 'text-red-300' : 'text-gray-300'}" title="${file.file.name}">
+                    ${file.file.name}
+                </span>
+                ${file.giornata ? `<span class="flex-shrink-0 text-xs bg-teal-600/50 px-1.5 py-0.5 rounded">G${file.giornata}</span>` : ''}
+            </div>
+            ${file.status === 'pending' ? `
+                <button onclick="removeFromVotesQueue(${index})" class="text-red-400 hover:text-red-300 flex-shrink-0" title="Rimuovi">
+                    ✕
+                </button>
+            ` : ''}
+            ${file.status === 'error' ? `<span class="text-xs text-red-400 flex-shrink-0" title="${file.error}">${file.error?.substring(0, 30)}...</span>` : ''}
+        </li>
+    `).join('');
+    
+    // Abilita/disabilita pulsante upload
+    const pendingFiles = votesXlsxQueue.filter(f => f.status === 'pending').length;
+    if (pendingFiles > 0 && !votesQueueProcessing) {
+        uploadButton.disabled = false;
+        uploadButton.classList.remove('btn-secondary');
+        uploadButton.classList.add('btn-primary');
+        uploadButton.textContent = `🚀 Carica ${pendingFiles} File Voti in Coda`;
+    } else if (votesQueueProcessing) {
+        uploadButton.disabled = true;
+        uploadButton.textContent = '⏳ Elaborazione in corso...';
+    } else {
+        uploadButton.disabled = true;
+        uploadButton.classList.remove('btn-primary');
+        uploadButton.classList.add('btn-secondary');
+        uploadButton.textContent = '🚀 Carica Voti da Excel';
+    }
+};
+
+/**
+ * Rimuove un file dalla coda voti
+ */
+export const removeFromVotesQueue = (index) => {
+    if (votesXlsxQueue[index]?.status === 'pending') {
+        votesXlsxQueue.splice(index, 1);
+        updateVotesQueueUI();
+    }
+};
+
+/**
+ * Svuota la coda dei file voti
+ */
+export const clearVotesQueue = () => {
+    if (votesQueueProcessing) {
+        messageBox('Impossibile svuotare la coda durante l\'elaborazione.');
+        return;
+    }
+    votesXlsxQueue = [];
+    document.getElementById('votes-xlsx-file-input').value = '';
+    updateVotesQueueUI();
+};
+
+/**
+ * Gestisce la selezione dei file Excel dei voti (multipli)
+ */
+export const handleVotesXlsxFileSelect = () => {
+    const fileInput = document.getElementById('votes-xlsx-file-input');
+    
+    if (fileInput.files.length > 0) {
+        // Aggiungi i nuovi file alla coda
+        for (const file of fileInput.files) {
+            // Evita duplicati controllando il nome file
+            const alreadyInQueue = votesXlsxQueue.some(f => f.file.name === file.name && f.status === 'pending');
+            if (!alreadyInQueue) {
+                votesXlsxQueue.push({
+                    file: file,
+                    status: 'pending', // pending, processing, completed, error
+                    giornata: null,
+                    error: null
+                });
+            }
+        }
+        
+        updateVotesQueueUI();
+        
+        // Reset input per permettere ri-selezione stesso file
+        fileInput.value = '';
+    }
+};
+
+/**
+ * Conferma il caricamento dei voti da Excel (coda multipla)
+ */
+export const confirmVotesXlsxUpload = () => {
+    const pendingFiles = votesXlsxQueue.filter(f => f.status === 'pending');
+    
+    if (pendingFiles.length === 0) {
+        messageBox('Seleziona almeno un file Excel prima di procedere.');
+        return;
+    }
+    
+    const fileList = pendingFiles.map(f => `  • ${f.file.name}`).join('\n');
+    const message = pendingFiles.length === 1 
+        ? `Confermi il caricamento dei voti dal file:\n${fileList}\n\n⚠️ ATTENZIONE: I voti precedenti per la giornata verranno sovrascritti.`
+        : `Confermi il caricamento dei voti da ${pendingFiles.length} file:\n${fileList}\n\n⚠️ ATTENZIONE: I voti precedenti per ogni giornata verranno sovrascritti.`;
+    
+    if (confirm(message)) {
+        processVotesXlsxQueue();
+    }
+};
+
+/**
+ * Processa la coda dei file voti uno alla volta
+ */
+const processVotesXlsxQueue = async () => {
+    if (votesQueueProcessing) return;
+    
+    votesQueueProcessing = true;
+    updateVotesQueueUI();
+    
+    const queueStatus = document.getElementById('votes-xlsx-queue-status');
+    const currentFileSpan = document.getElementById('votes-xlsx-current-file');
+    const queueCurrentSpan = document.getElementById('votes-xlsx-queue-current');
+    const queueTotalSpan = document.getElementById('votes-xlsx-queue-total');
+    
+    const pendingFiles = votesXlsxQueue.filter(f => f.status === 'pending');
+    const totalFiles = pendingFiles.length;
+    
+    queueStatus?.classList.remove('hidden');
+    queueTotalSpan.textContent = totalFiles;
+    
+    let processedCount = 0;
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (let i = 0; i < votesXlsxQueue.length; i++) {
+        const queueItem = votesXlsxQueue[i];
+        
+        if (queueItem.status !== 'pending') continue;
+        
+        processedCount++;
+        queueCurrentSpan.textContent = processedCount;
+        currentFileSpan.textContent = `Elaborazione: ${queueItem.file.name}`;
+        
+        queueItem.status = 'processing';
+        updateVotesQueueUI();
+        
+        try {
+            const result = await processVotesXlsxFileSingle(queueItem.file);
+            
+            queueItem.status = 'completed';
+            queueItem.giornata = result.giornata;
+            successCount++;
+            
+        } catch (error) {
+            console.error(`Errore elaborazione voti ${queueItem.file.name}:`, error);
+            queueItem.status = 'error';
+            queueItem.error = error.message;
+            errorCount++;
+        }
+        
+        updateVotesQueueUI();
+    }
+    
+    votesQueueProcessing = false;
+    queueStatus?.classList.add('hidden');
+    
+    updateVotesQueueUI();
+    
+    // Messaggio finale riepilogativo
+    let summaryMessage = `📊 Elaborazione voti completata!\n\n`;
+    summaryMessage += `✅ File elaborati con successo: ${successCount}\n`;
+    if (errorCount > 0) {
+        summaryMessage += `❌ File con errori: ${errorCount}\n`;
+    }
+    
+    const completedFiles = votesXlsxQueue.filter(f => f.status === 'completed');
+    if (completedFiles.length > 0) {
+        const giornate = completedFiles.map(f => f.giornata).filter(g => g).sort((a, b) => a - b);
+        summaryMessage += `\n📅 Giornate caricate: ${giornate.join(', ')}`;
+    }
+    
+    messageBox(summaryMessage);
+};
+
+/**
+ * Processa un singolo file Excel dei voti (foglio "Statistico")
+ * Il file ha blocchi per ogni squadra di Serie A con: riga nome squadra, riga intestazioni, righe giocatori
+ * @param {File} file - Il file Excel da processare
+ * @returns {Promise<{giornata: number, totalePlayers: number, totaleSquadre: number}>}
+ */
+const processVotesXlsxFileSingle = async (file) => {
+    // Mostra progress bar
+    const progressContainer = document.getElementById('votes-xlsx-progress');
+    if (progressContainer) progressContainer.classList.remove('hidden');
+    
+    updateProgress(5, `Lettura ${file.name}...`, null, null, 'votes-xlsx-progress');
+    
+    // Leggi il file Excel con SheetJS
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    
+    console.log('[VOTI] Fogli disponibili:', workbook.SheetNames);
+    
+    // Cerca il foglio "Statistico"
+    let sheetName = workbook.SheetNames.find(name => name.toLowerCase().includes('statistico'));
+    if (!sheetName) {
+        throw new Error('Foglio "Statistico" non trovato nel file Excel. Fogli disponibili: ' + workbook.SheetNames.join(', '));
+    }
+    console.log('[VOTI] Foglio selezionato:', sheetName);
+    
+    const worksheet = workbook.Sheets[sheetName];
+    
+    // Converti in array di array (righe)
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+    
+    console.log('[VOTI] Righe totali nel file:', jsonData.length);
+    console.log('[VOTI] Prime 10 righe:', jsonData.slice(0, 10));
+    
+    // Estrai la giornata dal titolo (prima riga del foglio o dal nome del file)
+    // Possibili formati: "Voti Fantacalcio 1ª giornata di campionato" oppure nome file "Voti_Fantacalcio_Stagione_2025_26_Giornata_1.xlsx"
+    let giornata = 0;
+    
+    // Prova prima dalla prima riga del foglio
+    if (jsonData[0]) {
+        const titleRow = String(jsonData[0][0] || '');
+        const titleMatch = titleRow.match(/(\d+)[ªa]?\s*giornata/i);
+        if (titleMatch) {
+            giornata = parseInt(titleMatch[1]);
+        }
+    }
+    
+    // Se non trovato, prova dal nome del file
+    if (giornata === 0) {
+        const fileNameMatch = file.name.match(/[Gg]iornata[_\s]*(\d+)/i);
+        if (fileNameMatch) {
+            giornata = parseInt(fileNameMatch[1]);
+        }
+    }
+    
+    if (giornata === 0) {
+        throw new Error('Impossibile determinare la giornata dal file. Assicurati che il titolo contenga "Xª giornata" oppure che il nome file contenga "Giornata_X".');
+    }
+    
+    console.log(`[VOTI] Giornata rilevata: ${giornata}`);
+    
+    updateProgress(15, `Parsing voti giornata ${giornata}...`, null, null, 'votes-xlsx-progress');
+    
+    // Funzione helper per parsare numeri con virgola italiana o asterisco
+    const parseVoto = (str) => {
+        if (!str && str !== 0) return null;
+        let s = String(str).trim();
+        // Rimuovi asterisco (indica subentrato o simili)
+        s = s.replace(/\*/g, '');
+        if (s === '' || s === '-' || s.toLowerCase() === 'sv' || s.toLowerCase() === 's.v.') return null;
+        s = s.replace(',', '.');
+        const val = parseFloat(s);
+        return isNaN(val) ? null : val;
+    };
+    
+    const parseIntSafe = (str) => {
+        if (!str && str !== 0) return 0;
+        const s = String(str).trim().replace(',', '.');
+        return parseInt(s) || 0;
+    };
+    
+    // Parsing del foglio Statistico
+    // Struttura: blocchi per squadra di Serie A
+    // Ogni blocco: 1) Riga con nome squadra (cella A non vuota, cella B vuota o "Ruolo")
+    //              2) Riga intestazioni: Cod. Ruolo Nome Voto Gf Gs Rp Rs Rf Au Amm Esp Ass
+    //              3) Righe giocatori fino al prossimo blocco squadra
+    
+    const votes = [];
+    let currentTeam = null;
+    let inHeaderRow = false;
+    let teamCount = 0;
+    
+    // Indici colonna nel foglio Statistico (possono variare, li determiniamo dall'header)
+    // Default basato su screenshot: A=Cod, B=Ruolo, C=Nome, D=Voto, E=Gf, F=Gs, G=Rp, H=Rs, I=Rf, J=Au, K=Amm, L=Esp, M=Ass
+    let colMap = {
+        cod: 0, ruolo: 1, nome: 2, voto: 3,
+        gf: 4, gs: 5, rp: 6, rs: 7, rf: 8,
+        au: 9, amm: 10, esp: 11, ass: 12
+    };
+    
+    for (let i = 0; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        if (!row || row.length === 0) continue;
+        
+        const cellA = String(row[0] || '').trim();
+        const cellB = String(row[1] || '').trim();
+        const cellC = String(row[2] || '').trim();
+        const cellD = String(row[3] || '').trim();
+        
+        // Salta righe di disclaimer/titolo (prime righe con testo lungo)
+        if (i < 5 && (cellA.toLowerCase().includes('voti fantacalcio') || 
+                       cellA.toLowerCase().includes('solo su') || 
+                       cellA.toLowerCase().includes('questo file') ||
+                       cellA.toLowerCase().includes('da considerarsi'))) {
+            continue;
+        }
+        
+        // Rileva riga intestazioni colonne: contiene "Cod" o "Cod." nella colonna A e "Ruolo" nella B
+        if ((cellA.toLowerCase().startsWith('cod') && cellB.toLowerCase().startsWith('ruol'))) {
+            inHeaderRow = true;
+            // Mappa le colonne dinamicamente
+            for (let c = 0; c < row.length; c++) {
+                const header = String(row[c] || '').trim().toLowerCase();
+                if (header.startsWith('cod')) colMap.cod = c;
+                else if (header === 'ruolo' || header === 'r') colMap.ruolo = c;
+                else if (header === 'nome') colMap.nome = c;
+                else if (header === 'voto') colMap.voto = c;
+                else if (header === 'gf') colMap.gf = c;
+                else if (header === 'gs') colMap.gs = c;
+                else if (header === 'rp') colMap.rp = c;
+                else if (header === 'rs') colMap.rs = c;
+                else if (header === 'rf') colMap.rf = c;
+                else if (header === 'au') colMap.au = c;
+                else if (header === 'amm') colMap.amm = c;
+                else if (header === 'esp') colMap.esp = c;
+                else if (header === 'ass') colMap.ass = c;
+            }
+            console.log(`[VOTI] Intestazioni trovate per ${currentTeam}:`, colMap);
+            continue;
+        }
+        
+        // Rileva riga nome squadra:
+        // - Ha un valore in cellA ma il codice (colMap.cod) non è numerico
+        // - Non è una riga intestazione
+        if (cellA && !inHeaderRow) {
+            const codiceCell = String(row[colMap.cod] || '').trim();
+            const isNumeric = /^\d+$/.test(codiceCell);  // Controlla nella colonna corretta
+            
+            // Se il codice non è un numero, potrebbe essere una squadra
+            if (!isNumeric) {
+                const possibleTeamName = cellA;
+                // Se la riga ha poche colonne riempite, è probabilmente un nome squadra
+                const filledCols = row.filter(c => String(c || '').trim() !== '').length;
+                if (filledCols <= 3) {
+                    currentTeam = possibleTeamName;
+                    teamCount++;
+                    inHeaderRow = false; // Reset - aspettiamo la riga intestazioni
+                    console.log(`[VOTI] Squadra trovata: "${currentTeam}" (riga ${i + 1})`);
+                    continue;
+                }
+            }
+        }
+        
+        // Reset flag header dopo averlo usato (ma processa comunque la prima riga di giocatori)
+        if (inHeaderRow) {
+            inHeaderRow = false;
+            // Non fare continue! La riga deve essere processata come giocatore
+        }
+        
+        // Riga giocatore: ha un codice numerico in colonna A
+        if (currentTeam && cellA) {
+            const codice = String(row[colMap.cod] || '').trim();
+            const ruolo = String(row[colMap.ruolo] || '').trim();
+            const nome = String(row[colMap.nome] || '').trim();
+            const voto = parseVoto(row[colMap.voto]);
+            
+            // Salta se non ha nome o codice
+            if (!nome || !codice) continue;
+            
+            const playerVote = {
+                giornata: giornata,
+                codice: codice,
+                ruolo: ruolo,
+                nome: nome,
+                squadraSerieA: currentTeam,
+                voto: voto,
+                gf: parseIntSafe(row[colMap.gf]),
+                gs: parseIntSafe(row[colMap.gs]),
+                rp: parseIntSafe(row[colMap.rp]),
+                rs: parseIntSafe(row[colMap.rs]),
+                rf: parseIntSafe(row[colMap.rf]),
+                au: parseIntSafe(row[colMap.au]),
+                amm: parseIntSafe(row[colMap.amm]),
+                esp: parseIntSafe(row[colMap.esp]),
+                ass: parseIntSafe(row[colMap.ass]),
+                timestamp: new Date().toISOString()
+            };
+            
+            votes.push(playerVote);
+        }
+    }
+    
+    // Conta giocatori unici per debug
+    const uniquePlayers = new Map();
+    votes.forEach(v => {
+        const key = `${v.codice}_${v.ruolo}`;
+        uniquePlayers.set(key, v.nome);
+    });
+    
+    const roleDistribution = { 'P': 0, 'D': 0, 'C': 0, 'A': 0 };
+    votes.forEach(v => {
+        if (roleDistribution.hasOwnProperty(v.ruolo)) {
+            roleDistribution[v.ruolo]++;
+        }
+    });
+    
+    console.log(`[VOTI] Parsing completato: ${votes.length} voti, ${uniquePlayers.size} giocatori unici per ${teamCount} squadre`);
+    console.log(`[VOTI] Distribuzione per ruolo: P=${roleDistribution.P}, D=${roleDistribution.D}, C=${roleDistribution.C}, A=${roleDistribution.A}`);
+    
+    // Debug: mostra i primi portieri
+    const goalkeepers = votes.filter(v => v.ruolo === 'P').slice(0, 5);
+    if (goalkeepers.length > 0) {
+        console.log(`[VOTI] Portieri trovati (primi 5):`, goalkeepers.map(p => `${p.nome} (${p.codice}) - ${p.squadraSerieA}`).join(', '));
+    } else {
+        console.warn(`[VOTI] ⚠️ NESSUN PORTIERE TROVATO!`);
+    }
+    
+    if (votes.length === 0) {
+        throw new Error(`Nessun voto trovato nel foglio "Statistico" per la giornata ${giornata}. Controllare il formato del file.`);
+    }
+    
+    updateProgress(40, `Cancellazione voti precedenti giornata ${giornata}...`, null, null, 'votes-xlsx-progress');
+    
+    // Cancella i voti esistenti per questa giornata
+    const votesCollection = getVotesCollectionRef();
+    const existingVotesQuery = query(votesCollection, where('giornata', '==', giornata));
+    const existingVotesSnapshot = await getDocs(existingVotesQuery);
+    
+    if (existingVotesSnapshot.docs.length > 0) {
+        console.log(`[VOTI] Cancellazione ${existingVotesSnapshot.docs.length} voti precedenti per giornata ${giornata}`);
+        const deletePromises = existingVotesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+    }
+    
+    updateProgress(55, `Salvataggio ${votes.length} voti giornata ${giornata}...`, null, null, 'votes-xlsx-progress');
+    
+    // Salva i nuovi voti in Firestore
+    let savedCount = 0;
+    for (const vote of votes) {
+        await addDoc(votesCollection, vote);
+        savedCount++;
+        
+        if (savedCount % 30 === 0 || savedCount === votes.length) {
+            const progress = 55 + Math.floor((savedCount / votes.length) * 40);
+            updateProgress(progress, `Salvati ${savedCount}/${votes.length} voti...`, null, null, 'votes-xlsx-progress');
+        }
+    }
+    
+    updateProgress(100, 'Completato!', null, null, 'votes-xlsx-progress');
+    
+    // Mostra riepilogo
+    renderVotesSummary(votes, giornata);
+    
+    console.log(`[VOTI] ✅ Giornata ${giornata}: ${savedCount} voti salvati per ${teamCount} squadre`);
+    
+    return {
+        giornata: giornata,
+        totalePlayers: votes.length,
+        totaleSquadre: teamCount
+    };
+};
+
+/**
+ * Renderizza il riepilogo dei voti caricati
+ */
+const renderVotesSummary = (votes, giornata) => {
+    const container = document.getElementById('votes-summary-container');
+    if (!container) return;
+    
+    // Raggruppa per squadra Serie A
+    const teamVotes = new Map();
+    votes.forEach(v => {
+        if (!teamVotes.has(v.squadraSerieA)) {
+            teamVotes.set(v.squadraSerieA, []);
+        }
+        teamVotes.get(v.squadraSerieA).push(v);
+    });
+    
+    let html = '<div class="bg-gray-800 border border-teal-700/50 rounded-lg p-4 mb-4">';
+    html += `<h5 class="text-lg font-bold text-teal-400 mb-3">Riepilogo Voti Giornata ${giornata}</h5>`;
+    html += `<p class="text-sm text-gray-300 mb-3">${votes.length} giocatori totali • ${teamVotes.size} squadre</p>`;
+    html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">';
+    
+    // Ordina le squadre alfabeticamente
+    const sortedTeams = Array.from(teamVotes.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    
+    for (const [teamName, players] of sortedTeams) {
+        const votati = players.filter(p => p.voto !== null).length;
+        const mediaVoto = votati > 0 ? (players.filter(p => p.voto !== null).reduce((sum, p) => sum + p.voto, 0) / votati).toFixed(2) : '-';
+        const golFatti = players.reduce((sum, p) => sum + p.gf, 0);
+        
+        html += `
+            <div class="bg-gray-700 rounded p-3 text-center">
+                <p class="text-sm font-bold text-white">${teamName}</p>
+                <p class="text-xs text-gray-400 mt-1">${players.length} giocatori</p>
+                <p class="text-xs text-teal-300">Votati: ${votati}</p>
+                <p class="text-xs text-blue-300">Media: ${mediaVoto}</p>
+                ${golFatti > 0 ? `<p class="text-xs text-green-300">Gol: ${golFatti}</p>` : ''}
+            </div>
+        `;
+    }
+    
+    html += '</div></div>';
+    container.innerHTML = html;
+};
+
 // Esporta variabili di stato per accesso esterno
 export const getLocalCsvContent = () => localCsvContent;
 export const setLocalCsvContent = (content) => { localCsvContent = content; };
@@ -2723,3 +3261,8 @@ window.confirmFormationsXlsxUpload = confirmFormationsXlsxUpload;
 window.processFormationsXlsxFile = processFormationsXlsxFile;
 window.removeFromFormationsQueue = removeFromFormationsQueue;
 window.clearFormationsQueue = clearFormationsQueue;
+window.triggerVotesXlsxFileInput = triggerVotesXlsxFileInput;
+window.handleVotesXlsxFileSelect = handleVotesXlsxFileSelect;
+window.confirmVotesXlsxUpload = confirmVotesXlsxUpload;
+window.removeFromVotesQueue = removeFromVotesQueue;
+window.clearVotesQueue = clearVotesQueue;

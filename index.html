@@ -1451,6 +1451,90 @@
 
                             <!-- Sezione Caricamento Statistiche Calciatori -->
                             <div class="border-t border-gray-700 pt-6 mt-6">
+                                <h4 class="text-lg font-semibold mb-4 text-teal-400">Caricamento Voti Fantacalcio (per Giornata)</h4>
+                                
+                                <!-- Caricamento da Excel - Supporta file multipli -->
+                                <div class="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-4">
+                                    <h5 class="text-md font-semibold mb-3 text-green-400">📋 Carica Voti da Excel - Supporta più file in coda</h5>
+                                    <div class="flex flex-wrap items-center gap-4 mb-3">
+                                        <label for="votes-xlsx-file-input" class="sr-only">Seleziona file Excel Voti</label>
+                                        <input type="file" id="votes-xlsx-file-input" class="hidden" onchange="handleVotesXlsxFileSelect()" accept=".xlsx,.xls" multiple aria-label="Seleziona file Excel Voti (multipli)">
+                                        <button onclick="triggerVotesXlsxFileInput()" class="btn-primary bg-green-600 hover:bg-green-700">📂 Seleziona File Excel (.xlsx)</button>
+                                        <button id="upload-votes-xlsx-button" onclick="confirmVotesXlsxUpload()" class="btn-secondary" disabled>🚀 Carica Voti da Excel</button>
+                                        <button id="clear-votes-queue-button" onclick="clearVotesQueue()" class="btn-secondary bg-red-600/50 hover:bg-red-700 hidden">🗑️ Svuota Coda</button>
+                                    </div>
+                                    
+                                    <!-- Coda file selezionati -->
+                                    <div id="votes-xlsx-queue-container" class="hidden mb-3">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-sm font-semibold text-green-300">📋 File in coda:</span>
+                                            <span id="votes-xlsx-queue-count" class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                                        </div>
+                                        <ul id="votes-xlsx-queue-list" class="space-y-1 max-h-40 overflow-y-auto bg-gray-800/50 rounded p-2">
+                                            <!-- Lista file popolata dinamicamente -->
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Status elaborazione coda -->
+                                    <div id="votes-xlsx-queue-status" class="hidden mb-3">
+                                        <div class="bg-blue-900/30 border border-blue-500/30 rounded p-2">
+                                            <div class="flex items-center gap-2">
+                                                <div class="animate-spin h-4 w-4 border-2 border-teal-400 border-t-transparent rounded-full"></div>
+                                                <span id="votes-xlsx-current-file" class="text-sm text-teal-300">Elaborazione in corso...</span>
+                                            </div>
+                                            <div class="text-xs text-gray-400 mt-1">
+                                                File <span id="votes-xlsx-queue-current">0</span> di <span id="votes-xlsx-queue-total">0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-xs text-gray-400">
+                                        💡 Puoi selezionare più file Excel contemporaneamente. Verranno elaborati in coda, uno alla volta.
+                                        Verrà letto solo il foglio <strong>"Statistico"</strong>. La giornata viene rilevata dal titolo del foglio o dal nome file.
+                                    </p>
+                                    <p class="text-xs text-teal-400 mt-1">
+                                        📄 <strong>Formato file:</strong> "Voti_Fantacalcio_Stagione_2025_26_Giornata_X.xlsx" — un file per ogni giornata.
+                                    </p>
+                                    
+                                    <!-- Legenda campi Excel -->
+                                    <div class="bg-gray-800/50 border border-gray-600/30 rounded-lg p-3 mt-3">
+                                        <p class="text-xs font-semibold text-teal-400 mb-2">📌 Legenda campi del file Excel (foglio "Statistico"):</p>
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-gray-400">
+                                            <div><span class="font-bold text-teal-300">Cod</span> = Codice calciatore</div>
+                                            <div><span class="font-bold text-teal-300">Ruolo</span> = P/D/C/A</div>
+                                            <div><span class="font-bold text-teal-300">Nome</span> = Nome calciatore</div>
+                                            <div><span class="font-bold text-teal-300">Voto</span> = Voto della giornata</div>
+                                            <div><span class="font-bold text-green-300">Gf</span> = Gol <strong>fatti</strong></div>
+                                            <div><span class="font-bold text-red-300">Gs</span> = Gol <strong>subiti</strong> (portieri)</div>
+                                            <div><span class="font-bold text-green-300">Rp</span> = Rigori <strong>parati</strong> (portieri)</div>
+                                            <div><span class="font-bold text-green-300">Rf</span> = Rigori <strong>segnati</strong></div>
+                                            <div><span class="font-bold text-orange-300">Rs</span> = Rigori <strong>sbagliati</strong></div>
+                                            <div><span class="font-bold text-gray-300">Au</span> = <strong>Autoreti</strong></div>
+                                            <div><span class="font-bold text-yellow-300">Amm</span> = <strong>Ammonizioni</strong></div>
+                                            <div><span class="font-bold text-red-300">Esp</span> = <strong>Espulsioni</strong></div>
+                                            <div><span class="font-bold text-cyan-300">Ass</span> = <strong>Assist</strong></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Progress Bar Voti Excel -->
+                                <div id="votes-xlsx-progress" class="mb-4 hidden">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span id="votes-xlsx-progress-status" class="text-sm text-gray-300">Inizializzazione...</span>
+                                        <span id="votes-xlsx-progress-percentage" class="text-sm font-bold text-teal-400">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                                        <div id="votes-xlsx-progress-bar-fill" class="bg-gradient-to-r from-teal-500 to-teal-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="votes-summary-container" class="mb-4">
+                                    <!-- Riepilogo voti caricati -->
+                                </div>
+                            </div>
+
+                            <!-- Sezione Caricamento Statistiche Calciatori -->
+                            <div class="border-t border-gray-700 pt-6 mt-6">
                                 <h4 class="text-lg font-semibold mb-4 text-blue-400">Caricamento Statistiche Calciatori</h4>
                                 
                                 <!-- Caricamento da Excel (NUOVO) -->
@@ -1608,6 +1692,30 @@
                                     </button>
                                 </div>
 
+                                <!-- Reset Voti Giornata Specifica -->
+                                <div class="border border-gray-700 rounded-lg p-4">
+                                    <h4 class="font-semibold text-lg mb-2 text-teal-300">Reset Voti Giornata</h4>
+                                    <p class="text-sm text-gray-400 mb-3">Cancella tutti i voti fantacalcio caricati per una giornata specifica.</p>
+                                    <button onclick="clearVotesForGiornata()" class="btn-danger">
+                                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Cancella Voti Giornata
+                                    </button>
+                                </div>
+
+                                <!-- Reset Tutti i Voti -->
+                                <div class="border border-gray-700 rounded-lg p-4">
+                                    <h4 class="font-semibold text-lg mb-2 text-red-300">Reset Tutti i Voti</h4>
+                                    <p class="text-sm text-gray-400 mb-3">Cancella TUTTI i voti fantacalcio di tutte le giornate massivamente.</p>
+                                    <button onclick="clearAllVotes()" class="btn-danger">
+                                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Cancella Tutti i Voti
+                                    </button>
+                                </div>
+
                                 <!-- Reset Crediti Utenti -->
                                 <div class="border border-gray-700 rounded-lg p-4">
                                     <h4 class="font-semibold text-lg mb-2 text-red-300">Reset Crediti Utenti</h4>
@@ -1730,6 +1838,17 @@
                             <div class="text-left">
                                 <h4 class="font-bold">Statistiche Allenatore</h4>
                                 <p class="text-xs opacity-90">Efficacia delle formazioni schierate</p>
+                            </div>
+                        </button>
+                        
+                        <!-- Statistiche Calciatori Singoli -->
+                        <button onclick="switchLeagueDataView('player-single-stats')" class="bg-teal-600 hover:bg-teal-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div class="text-left">
+                                <h4 class="font-bold">Statistiche Calciatori Singoli</h4>
+                                <p class="text-xs opacity-90">Voti e bonus per giornata di ogni calciatore</p>
                             </div>
                         </button>
                     </div>
@@ -2003,6 +2122,55 @@
                             <!-- Contenuto dinamico -->
                             <div id="coach-stats-content">
                                 <p class="text-center text-gray-500 py-8">Carica le formazioni per visualizzare le statistiche allenatore.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SOTTOSEZIONE: Statistiche Calciatori Singoli -->
+                    <div id="league-sub-player-single-stats" class="hidden">
+                        <div class="card p-3 sm:p-6">
+                            <!-- Titolo e descrizione -->
+                            <div class="flex items-center gap-2 mb-4">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-teal-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                </svg>
+                                <div>
+                                    <h3 class="text-lg sm:text-xl font-bold text-teal-400">Statistiche Calciatori Singoli</h3>
+                                    <p class="text-xs text-gray-400 hidden sm:block">Analizza voti e bonus di ogni calciatore per giornata</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Ricerca calciatore -->
+                            <div class="bg-gray-800/50 rounded-lg p-3 mb-4">
+                                <label for="player-single-search" class="block text-xs font-semibold text-gray-400 mb-2">Cerca Calciatore</label>
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <input type="text" id="player-single-search" list="player-single-datalist"
+                                               class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-500"
+                                               placeholder="Digita il nome del calciatore..."
+                                               autocomplete="off"
+                                               onkeydown="if(event.key==='Enter'){event.preventDefault(); onPlayerSingleSelected();}">
+                                        <datalist id="player-single-datalist"></datalist>
+                                    </div>
+                                    <button onclick="onPlayerSingleSelected()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-shrink-0">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                        Cerca
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Seleziona dalla lista o digita il nome e premi Cerca</p>
+                            </div>
+                            
+                            <!-- Contenuto dinamico statistiche -->
+                            <div id="player-single-stats-content">
+                                <div class="text-center py-12">
+                                    <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                    <p class="text-gray-400 text-lg font-semibold">Seleziona un calciatore</p>
+                                    <p class="text-gray-500 text-sm mt-2">Cerca e seleziona un calciatore per visualizzare le statistiche dettagliate.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2473,6 +2641,7 @@
         import './js/league-stats.js';
         import './js/rendering.js';
         import './js/coach-stats.js';
+        import './js/player-single-stats.js';
         import './js/debug-formations.js';
         
         // Inizializza l'applicazione quando il DOM è pronto
@@ -2787,7 +2956,7 @@
             document.getElementById('league-data-main-menu').classList.add('hidden');
             
             // Nascondi tutte le sottosezioni
-            const subSections = ['league-sub-results', 'league-sub-squads', 'league-sub-players', 'league-sub-stats', 'league-sub-standings', 'league-sub-team-of-season', 'league-sub-coach-stats'];
+            const subSections = ['league-sub-results', 'league-sub-squads', 'league-sub-players', 'league-sub-stats', 'league-sub-standings', 'league-sub-team-of-season', 'league-sub-coach-stats', 'league-sub-player-single-stats'];
             subSections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -2847,6 +3016,12 @@
                     // Carica le statistiche allenatore
                     if (window.renderCoachStats) window.renderCoachStats();
                     break;
+                case 'player-single-stats':
+                    titleEl.textContent = 'Statistiche Calciatori Singoli';
+                    document.getElementById('league-sub-player-single-stats').classList.remove('hidden');
+                    // Inizializza la sezione
+                    if (window.initPlayerSingleStats) window.initPlayerSingleStats();
+                    break;
             }
             
             // Nascondi il regolamento nelle sottosezioni
@@ -2858,7 +3033,7 @@
          */
         function goBackToLeagueMenu() {
             // Nascondi tutte le sottosezioni
-            const subSections = ['league-sub-results', 'league-sub-squads', 'league-sub-players', 'league-sub-stats', 'league-sub-standings', 'league-sub-team-of-season', 'league-sub-coach-stats'];
+            const subSections = ['league-sub-results', 'league-sub-squads', 'league-sub-players', 'league-sub-stats', 'league-sub-standings', 'league-sub-team-of-season', 'league-sub-coach-stats', 'league-sub-player-single-stats'];
             subSections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -4118,7 +4293,7 @@
     <!-- Footer versione -->
     <footer class="bg-gray-900 border-t border-gray-800 py-4 mt-8 mb-20 sm:mb-0">
         <div class="text-center text-gray-500 text-sm">
-            <p>FantaBet v3.13.0</p>
+            <p>FantaBet v3.14.0</p>
             <p class="text-xs text-gray-600" id="update-timestamp"></p>
         </div>
     </footer>

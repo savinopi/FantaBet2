@@ -172,6 +172,9 @@ export const loadPlayerStats = async () => {
             allStats.push(data);
         });
         
+        // Estrai le squadre uniche dai dati
+        const uniqueSquads = [...new Set(allStats.map(stat => stat.fantaSquad).filter(Boolean))].sort();
+        
         // Popola i filtri
         const squadFilter = document.getElementById('stats-squad-filter');
         
