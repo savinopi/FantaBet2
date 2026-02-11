@@ -1,8 +1,16 @@
 # FANTABet - Struttura Progetto
 
-**Versione: 3.14.0**
+**Versione: 3.14.1**
 
-## 🆕 Changelog v3.14.0
+## 🆕 Changelog v3.14.1
+
+### Migliorie e Correzioni
+- **UI/UX Improvements**: Refinement interfaccia utente
+- **CSS Fixes**: Aggiustamenti styling e responsive design
+- **Performance**: Ottimizzazioni in app.js
+- **Upload Enhancements**: Miglioramenti nella gestione file CSV
+
+## Changelog v3.14.0
 
 ### Sistema Upload Voti Fantacalcio
 - **Caricamento Excel Voti**: Nuovo modulo per caricare voti XLSX "Statistico" con schema giornata-squadra

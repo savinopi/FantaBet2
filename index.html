@@ -53,12 +53,13 @@
 
     <!-- ========================================
          BANNER FANTABET FISSO (sempre visibile)
+         Con safe area per notch e Dynamic Island
          ======================================== -->
-    <div id="global-header" class="fixed top-0 left-0 right-0 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-2 shadow-lg z-40" style="padding-top: max(0.75rem, calc(var(--safe-area-inset-top) + 0.25rem));">
+    <div id="global-header" class="fixed top-0 left-0 right-0 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 px-3 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-2 shadow-lg z-40" style="padding-top: max(12px, calc(var(--safe-area-inset-top) + 12px)); padding-right: max(12px, var(--safe-area-inset-right)); padding-left: max(12px, var(--safe-area-inset-left));">
         <div class="flex items-center justify-between max-w-md lg:max-w-full mx-auto">
-            <h1 class="text-2xl sm:text-3xl lg:text-2xl font-bold text-white cursor-pointer" onclick="window.location.reload();">FANTABET</h1>
+            <h1 class="text-xl sm:text-2xl lg:text-2xl font-bold text-white cursor-pointer" onclick="window.location.reload();">FANTABET</h1>
             <div class="relative">
-                <button id="profile-button" class="w-10 h-10 sm:w-12 sm:h-12 lg:w-9 lg:h-9 rounded-full bg-white text-purple-700 font-bold text-lg sm:text-xl lg:text-base flex items-center justify-center hover:bg-purple-100 transition" onclick="window.toggleProfileMenu(event)">A</button>
+                <button id="profile-button" class="w-12 h-12 sm:w-12 sm:h-12 lg:w-10 lg:h-10 rounded-full bg-white text-purple-700 font-bold text-lg sm:text-lg lg:text-base flex items-center justify-center hover:bg-purple-100 transition touch-action-manipulation" onclick="window.toggleProfileMenu(event)" title="Menu profilo">A</button>
             </div>
         </div>
     </div>
@@ -68,6 +69,13 @@
         <div class="p-4 border-b border-gray-700 bg-gray-800/50">
             <p class="text-xs text-gray-400 mb-1">Account</p>
             <p id="profile-email" class="text-sm text-white font-medium truncate"></p>
+        </div>
+        <button onclick="toggleSystemInfo()" class="w-full px-4 py-3 text-left text-gray-200 hover:bg-purple-500/20 font-semibold transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"></path></svg>
+            Info sistema
+        </button>
+        <div id="system-info" class="hidden px-4 pb-3 text-xs text-gray-400 border-b border-gray-800">
+            Versione sito: <span class="text-gray-200 font-semibold">FantaBet v3.14.0</span>
         </div>
         <button onclick="handleLogout()" class="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/20 font-semibold transition flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -89,10 +97,21 @@
             }
         };
 
+        window.toggleSystemInfo = () => {
+            const info = document.getElementById('system-info');
+            if (info) {
+                info.classList.toggle('hidden');
+            }
+        };
+
         window.closeProfileMenu = () => {
             const menu = document.getElementById('profile-menu');
             if (menu) {
                 menu.classList.add('hidden');
+            }
+            const info = document.getElementById('system-info');
+            if (info) {
+                info.classList.add('hidden');
             }
         };
 
@@ -1267,25 +1286,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Caricamento da CSV (legacy) -->
-                            <details class="mb-4">
-                                <summary class="cursor-pointer text-gray-400 hover:text-gray-300 text-sm">📄 Oppure carica da CSV (metodo classico)</summary>
-                                <div class="mt-3 pl-4 border-l-2 border-gray-700">
-                                    <div class="flex flex-wrap items-center gap-4 mb-4">
-                                        <label for="csv-file-input" class="sr-only">Seleziona file CSV</label>
-                                        <input type="file" id="csv-file-input" class="hidden" onchange="handleFileSelect()" accept=".csv" aria-label="Seleziona file CSV">
-                                        <button onclick="triggerFileInput()" class="btn-primary">Seleziona File Calendario (.csv)</button>
-                                        <button id="upload-button" onclick="confirmUpload()" class="btn-secondary" disabled>Carica File</button>
-                                        <span id="file-name-display" class="text-gray-400" aria-live="polite">Nessun file selezionato.</span>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mb-2">
-                                        Il file CSV deve avere il delimitatore ';' e il seguente tracciato: Giornata;Casa;P.Casa;P.Ospite;Ospite;Risultato.
-                                        Le partite con risultato (es. '2-1') verranno importate come risultati storici.
-                                        Le partite con risultato '-' verranno importate come partite aperte per le scommesse.
-                                    </p>
-                                </div>
-                            </details>
-                            
                             <div class="bg-blue-900/20 border border-blue-500/30 rounded-lg px-4 py-2 mb-6">
                                 <p class="text-xs text-blue-300">
                                     <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -1293,14 +1293,6 @@
                                     </svg>
                                     <strong>Date automatiche:</strong> Il fantacalcio è iniziato alla 3ª giornata di Serie A 2025/26. Le date vengono mappate automaticamente (Giornata 1 → 13 set 2025, Giornata 2 → 20 set 2025, ecc.)
                                 </p>
-                            </div>
-                            
-                            <!-- Tabella dati CSV caricati -->
-                            <div class="border-t border-gray-700 pt-6">
-                                <h4 class="text-lg font-semibold mb-4 text-green-400">Dati Caricati</h4>
-                                <div id="csv-data-container" class="overflow-x-auto">
-                                    <p class="text-gray-500">Nessun dato da visualizzare. Carica un file CSV.</p>
-                                </div>
                             </div>
                             
                             <!-- Sezione Caricamento Rose -->
@@ -1331,27 +1323,6 @@
                                     <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
                                         <div id="squads-xlsx-progress-bar-fill" class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
                                     </div>
-                                </div>
-                                
-                                <!-- Caricamento da CSV (legacy) -->
-                                <details class="mb-4">
-                                    <summary class="cursor-pointer text-gray-400 hover:text-gray-300 text-sm">📄 Oppure carica da CSV (metodo classico)</summary>
-                                    <div class="mt-3 pl-4 border-l-2 border-gray-700">
-                                        <div class="flex flex-wrap items-center gap-4 mb-4">
-                                            <label for="squads-csv-file-input" class="sr-only">Seleziona file CSV Rose</label>
-                                            <input type="file" id="squads-csv-file-input" class="hidden" onchange="handleSquadsFileSelect()" accept=".csv" aria-label="Seleziona file CSV Rose">
-                                            <button onclick="triggerSquadsFileInput()" class="btn-primary">Seleziona File Rose (.csv)</button>
-                                            <button id="upload-squads-button" onclick="confirmSquadsUpload()" class="btn-secondary" disabled>Carica Rose</button>
-                                            <span id="squads-file-name-display" class="text-gray-400" aria-live="polite">Nessun file selezionato.</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mb-4">
-                                            Il file CSV deve avere il delimitatore ';' e il seguente tracciato: Squadra;Ruolo;Calciatore;Squadra (Serie A);Costo.
-                                        </p>
-                                    </div>
-                                </details>
-                                
-                                <div id="squads-data-container" class="overflow-x-auto">
-                                    <p class="text-gray-500 text-sm">Nessun dato rose caricato.</p>
                                 </div>
                             </div>
                             
@@ -1412,40 +1383,6 @@
                                     <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
                                         <div id="formations-xlsx-progress-bar-fill" class="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
                                     </div>
-                                </div>
-                                
-                                <!-- Caricamento da CSV (legacy) -->
-                                <details class="mb-4">
-                                    <summary class="cursor-pointer text-gray-400 hover:text-gray-300 text-sm">📄 Oppure carica da CSV (metodo classico)</summary>
-                                    <div class="mt-3 pl-4 border-l-2 border-gray-700">
-                                        <div class="flex flex-wrap items-center gap-4 mb-4">
-                                            <label for="formations-csv-file-input" class="sr-only">Seleziona file CSV Formazioni</label>
-                                            <input type="file" id="formations-csv-file-input" class="hidden" onchange="handleFormationsFileSelect()" accept=".csv" aria-label="Seleziona file CSV Formazioni">
-                                            <button onclick="triggerFormationsFileInput()" class="btn-primary">Seleziona File Formazioni (.csv)</button>
-                                            <button id="upload-formations-button" onclick="confirmFormationsUpload()" class="btn-secondary" disabled>Carica Formazioni</button>
-                                            <span id="formations-file-name-display" class="text-gray-400" aria-live="polite">Nessun file selezionato.</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mb-2">
-                                            Il file CSV deve avere il delimitatore ';' con tracciato completo.
-                                        </p>
-                                    </div>
-                                </details>
-                                
-                                <!-- Progress Bar Formazioni CSV -->
-                                <div id="formations-progress" class="mb-4 hidden">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span id="formations-progress-status" class="text-sm text-gray-300">Inizializzazione...</span>
-                                        <span id="formations-progress-percentage" class="text-sm font-bold text-orange-400">0%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
-                                        <div id="formations-progress-bar-fill" class="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                                <div id="formations-summary-container" class="mb-4">
-                                    <!-- Riepilogo formazioni caricate -->
-                                </div>
-                                <div id="formations-data-container" class="overflow-x-auto">
-                                    <p class="text-gray-500 text-sm">Nessuna formazione caricata.</p>
                                 </div>
                             </div>
 
@@ -1546,35 +1483,6 @@
                                         <button onclick="triggerStatsXlsxFileInput()" class="btn-primary bg-green-600 hover:bg-green-700">Seleziona File Excel (.xlsx)</button>
                                         <button id="upload-stats-xlsx-button" onclick="confirmStatsXlsxUpload()" class="btn-secondary" disabled>Carica da Excel</button>
                                         <span id="stats-xlsx-file-name-display" class="text-gray-400" aria-live="polite">Nessun file selezionato.</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Caricamento da CSV (legacy) -->
-                                <details class="mb-4">
-                                    <summary class="cursor-pointer text-gray-400 hover:text-gray-300 text-sm">📄 Oppure carica da CSV (metodo classico)</summary>
-                                    <div class="flex flex-wrap items-center gap-4 mt-3 pl-4 border-l-2 border-gray-700">
-                                        <label for="stats-csv-file-input" class="sr-only">Seleziona file CSV Statistiche</label>
-                                        <input type="file" id="stats-csv-file-input" class="hidden" onchange="handleStatsFileSelect()" accept=".csv" aria-label="Seleziona file CSV Statistiche">
-                                        <button onclick="triggerStatsFileInput()" class="btn-primary">Seleziona File Statistiche (.csv)</button>
-                                        <button id="upload-stats-button" onclick="confirmStatsUpload()" class="btn-secondary" disabled>Carica Statistiche</button>
-                                        <span id="stats-file-name-display" class="text-gray-400" aria-live="polite">Nessun file selezionato.</span>
-                                    </div>
-                                </details>
-                                <p class="text-xs text-gray-500 mb-2">
-                                    Il file CSV deve avere il delimitatore ';' e contenere: Id;R;Nome;Squadra;Pv;Mv;Fm;Gf;Gs;Rp;Rc;R+;R-;Ass;Amm;Esp;Au
-                                </p>
-                                <p class="text-xs text-gray-400 mb-4">
-                                    <strong>Legenda:</strong> R=Ruolo, Pv=Partite a voto, Mv=Media voto, Fm=Fantamedia, Gf=Gol fatti, Gs=Gol subiti, 
-                                    Rp=Rigori parati, Rc=Rigori concessi, R+=Rigori segnati, R-=Rigori sbagliati, Ass=Assist, Amm=Ammonizioni, Esp=Espulsioni, Au=Autogol
-                                </p>
-                                <!-- Progress Bar Statistiche -->
-                                <div id="stats-progress" class="mb-4 hidden">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span id="stats-progress-status" class="text-sm text-gray-300">Inizializzazione...</span>
-                                        <span id="stats-progress-percentage" class="text-sm font-bold text-blue-400">0%</span>
-                                    </div>
-                                    <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
-                                        <div id="stats-progress-bar-fill" class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
                                     </div>
                                 </div>
                                 <div id="stats-summary-container" class="mb-4">
@@ -2523,39 +2431,40 @@
 
             <!-- ========================================
                  BOTTOM NAVIGATION BAR (Mobile/Tablet)
+                 Con safe area per home indicator e gestures
                  ======================================== -->
-            <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-md border-t border-gray-800 z-40" style="padding-bottom: max(0.5rem, var(--safe-area-inset-bottom));">
-                <div style="display: grid; grid-template-columns: repeat(5, 1fr); width: 100%; height: auto;">
+            <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-md border-t-2 border-purple-600/50 z-40" style="padding-bottom: max(8px, var(--safe-area-inset-bottom)); padding-left: max(4px, var(--safe-area-inset-left)); padding-right: max(4px, var(--safe-area-inset-right));">
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); width: 100%; height: auto; gap: 2px;">
                     <!-- Tab Home -->
-                    <button onclick="switchBottomNavTab('home')" id="nav-tab-home" class="bottom-nav-tab active" title="Home">
+                    <button onclick="switchBottomNavTab('home')" id="nav-tab-home" class="bottom-nav-tab active" title="Home" style="min-height: 64px; padding: 8px 4px;">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h12a1 1 0 001-1v-10M9 21h6v-6a1 1 0 011-1h2a1 1 0 011 1v6"></path>
                         </svg>
-                        <span>Home</span>
+                        <span class="text-xs">Home</span>
                     </button>
 
                     <!-- Tab Dati Lega -->
-                    <button onclick="switchBottomNavTab('league_data')" id="nav-tab-league-data" class="bottom-nav-tab" title="Dati Lega">
+                    <button onclick="switchBottomNavTab('league_data')" id="nav-tab-league-data" class="bottom-nav-tab" title="Dati Lega" style="min-height: 64px; padding: 8px 4px;">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path>
                         </svg>
-                        <span>Dati Lega</span>
+                        <span class="text-xs">Dati Lega</span>
                     </button>
 
                     <!-- Tab Scommesse -->
-                    <button onclick="switchBottomNavTab('betting')" id="nav-tab-betting" class="bottom-nav-tab" title="Scommesse">
+                    <button onclick="switchBottomNavTab('betting')" id="nav-tab-betting" class="bottom-nav-tab" title="Scommesse" style="min-height: 64px; padding: 8px 4px;">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <span class="whitespace-nowrap text-center">Scommesse</span>
+                        <span class="text-xs">Scommesse</span>
                     </button>
 
                     <!-- Tab Utente -->
-                    <button onclick="switchBottomNavTab('user')" id="nav-tab-user" class="bottom-nav-tab" title="Utente">
+                    <button onclick="switchBottomNavTab('user')" id="nav-tab-user" class="bottom-nav-tab" title="Utente" style="min-height: 64px; padding: 8px 4px;">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
                         </svg>
-                        <span>Profilo</span>
+                        <span class="text-xs">Profilo</span>
                     </button>
 
                     <!-- Tab Settings -->
@@ -4290,48 +4199,7 @@
         window.closeChartFullscreen = closeChartFullscreen;
     </script>
 
-    <!-- Footer versione -->
-    <footer class="bg-gray-900 border-t border-gray-800 py-4 mt-8 mb-20 sm:mb-0">
-        <div class="text-center text-gray-500 text-sm">
-            <p>FantaBet v3.14.0</p>
-            <p class="text-xs text-gray-600" id="update-timestamp"></p>
-        </div>
-    </footer>
-
     <script>
-        // Carica l'ultimo commit da GitHub
-        async function loadLastCommit() {
-            try {
-                const response = await fetch('https://api.github.com/repos/savinopi/FantaBet2/commits?per_page=1');
-                if (!response.ok) throw new Error('Failed to fetch');
-                
-                const commits = await response.json();
-                if (commits.length === 0) throw new Error('No commits found');
-                
-                const lastCommit = commits[0];
-                const commitDate = new Date(lastCommit.commit.author.date);
-                
-                const dateString = commitDate.toLocaleString('it-IT', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                document.getElementById('update-timestamp').textContent = `Ultimo commit: ${dateString}`;
-            } catch (error) {
-                document.getElementById('update-timestamp').textContent = 'Versione non disponibile';
-            }
-        }
-        
-        // Carica al load della pagina
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadLastCommit);
-        } else {
-            loadLastCommit();
-        }
-
         // ========================================
         // GESTIONE ALLEGATI GIORNATE
         // ========================================

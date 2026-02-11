@@ -15,6 +15,8 @@
     --safe-area-inset-right: env(safe-area-inset-right, 0px);
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-inset-left: env(safe-area-inset-left, 0px);
+    --header-height: 64px;
+    --bottom-nav-height: 72px;
 }
 
 /* Colore personalizzato per righe alternate tabella */
@@ -75,8 +77,21 @@ body {
     /* Padding per safe area */
     padding-top: 0;
     padding-right: max(0.75rem, var(--safe-area-inset-right));
-    padding-bottom: max(0.75rem, var(--safe-area-inset-bottom));
+    padding-bottom: max(0.5rem, var(--safe-area-inset-bottom));
     padding-left: max(0.75rem, var(--safe-area-inset-left));
+}
+
+/* Safe area spacer per il top notch */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: max(0px, var(--safe-area-inset-top));
+    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), transparent);
+    z-index: 35;
+    pointer-events: none;
 }
 
 /* Overlay blu per migliorare la leggibilità */
@@ -111,24 +126,30 @@ body::before {
 
 /* ===================================
    PULSANTI
-   Ottimizzati per mobile con minimo 44x44px (Apple HIG)
+   Ottimizzati per mobile con minimo 48x48px (Apple HIG)
    =================================== */
 
 .btn-primary { 
     background-color: #2563eb; 
     color: white; 
-    padding: 14px 20px; 
+    padding: 12px 20px; 
     border-radius: 8px; 
     font-weight: 600; 
     font-size: 16px;
-    min-height: 44px;
+    min-height: 48px;
+    min-width: 48px;
     transition: background-color 0.2s; 
     cursor: pointer;
     touch-action: manipulation;
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 .btn-primary:hover { background-color: #1d4ed8; }
+.btn-primary:active { background-color: #1e40af; }
 
 /* Effetto shimmer per i bottoni */
 .btn-primary::before {

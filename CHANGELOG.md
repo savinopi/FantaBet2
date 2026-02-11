@@ -2,6 +2,14 @@
 
 Tutti i cambiamenti notevoli di questo progetto saranno documentati in questo file.
 
+## [3.14.1] - 2026-02-11
+
+### Migliorie
+- **Miglioramenti UI/UX**: Refinement interfaccia utente
+- **Correzioni CSS**: Aggiustamenti styling e responsive design
+- **Ottimizzazioni App**: Performance improvements in app.js
+- **Miglioramenti Upload CSV**: Refinement nella gestione upload file
+
 ## [3.14.0] - 2026-02-09
 
 ### Aggiunte

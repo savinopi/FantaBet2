@@ -1,7 +1,7 @@
 {
   "name": "fantabet",
-  "version": "3.14.0",
-  "description": "**Versione: 3.14.0** - FANTABet v3.14.0: Votes Upload System, Player Single Statistics, Parser Bug Fixes",
+  "version": "3.14.1",
+  "description": "**Versione: 3.14.1** - FANTABet v3.14.1: UI/UX Improvements and Bug Fixes",
   "main": "index.js",
   "scripts": {
     "build:css": "tailwindcss -i css/input.css -o css/output.css",

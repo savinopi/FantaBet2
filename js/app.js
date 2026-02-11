@@ -147,22 +147,7 @@ import {
     setDrawDependencies
 } from './draw.js';
 
-import {
-    triggerFileInput,
-    handleFileSelect,
-    confirmUpload,
-    processNewFile,
-    processUploadedData,
-    triggerSquadsFileInput,
-    handleSquadsFileSelect,
-    confirmSquadsUpload,
-    processSquadsFile,
-    triggerStatsFileInput,
-    handleStatsFileSelect,
-    confirmStatsUpload,
-    processStatsFile,
-    setCsvUploadDependencies
-} from './csv-upload.js';
+import './csv-upload.js';
 
 import {
     showMatchDetails,
@@ -526,13 +511,6 @@ const setupFirebase = async () => {
         // Setup dipendenze per draw.js
         setDrawDependencies({
             calculateStandings: calculateStandings
-        });
-        
-        // Setup dipendenze per csv-upload.js
-        setCsvUploadDependencies({
-            processCsvContent: processCsvContent,
-            renderHistoricResults: renderHistoricResults,
-            loadActiveGiornata: loadActiveGiornata
         });
         
         // Setup dipendenze per admin.js - sarà completato dopo che le funzioni sono definite
