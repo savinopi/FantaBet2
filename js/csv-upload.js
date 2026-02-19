@@ -671,9 +671,6 @@ export const processSquadsXlsxFile = async () => {
         
         updateProgress(100, 'Completato!', null, null, 'squads-xlsx-progress');
         
-        // Mostra riepilogo
-        renderSquadsData(squads);
-        
         console.log('[DEBUG ROSE] ✅ Caricamento completato! Squadre salvate in Firebase:', Array.from(squads.keys()));
         messageBox(`Rose caricate da Excel!\n\n✅ ${squads.size} squadre\n✅ ${players.length} giocatori totali\n✅ ${players.filter(p => p.playerId).length} con ID statistiche`);
         
@@ -1647,8 +1644,7 @@ const processFormationsXlsxFileSingle = async (file) => {
     updateProgress(100, `Completato giornata ${giornata}!`, null, null, 'formations-xlsx-progress');
 
     // Mostra riepilogo
-    const giornateSet = new Set([giornata]);
-    renderFormationsData(formazioni, giornateSet, squadreSet);
+    renderFormationsDataView(formazioni);
 
     // Nascondi progress bar dopo un breve delay
     setTimeout(() => {
